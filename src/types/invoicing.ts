@@ -98,4 +98,6 @@ export interface LineItemInput {
   description: string;
   quantity: number;
   unitPrice: number;
+  discountType?: 'percentage' | 'fixed';
+  discountAmount?: number;
 }

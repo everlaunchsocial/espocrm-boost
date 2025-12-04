@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { CustomerSelector } from '@/components/invoicing/CustomerSelector';
 import { LineItemsEditor } from '@/components/invoicing/LineItemsEditor';
 import { TotalsSummary } from '@/components/invoicing/TotalsSummary';
@@ -38,15 +39,46 @@ const CreateInvoice = () => {
   const [jobDescription, setJobDescription] = useState('');
   
   const [items, setItems] = useState<LineItemInput[]>([
-    { description: '', quantity: 1, unitPrice: 0 },
+    { description: '', quantity: 1, unitPrice: 0, discountType: 'fixed', discountAmount: 0 },
   ]);
   
   const [taxRate, setTaxRate] = useState(0);
   const [dueDays, setDueDays] = useState(30);
   const [notes, setNotes] = useState('');
   const [createContactOnSave, setCreateContactOnSave] = useState(false);
+  
+  // Overall discount
+  const [overallDiscountType, setOverallDiscountType] = useState<'percentage' | 'fixed'>('fixed');
+  const [overallDiscountAmount, setOverallDiscountAmount] = useState(0);
 
-  const subtotal = items.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
+  // Calculate line item discounts
+  const calculateLineItemDiscount = (item: LineItemInput) => {
+    const baseTotal = (item.quantity || 0) * (item.unitPrice || 0);
+    if (!item.discountAmount || item.discountAmount <= 0) return 0;
+    if (item.discountType === 'percentage') {
+      return baseTotal * (item.discountAmount / 100);
+    }
+    return item.discountAmount;
+  };
+
+  const lineItemDiscounts = items.reduce((sum, item) => sum + calculateLineItemDiscount(item), 0);
+  
+  // Subtotal before any discounts
+  const grossSubtotal = items.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
+  
+  // Subtotal after line item discounts
+  const subtotalAfterLineDiscounts = grossSubtotal - lineItemDiscounts;
+  
+  // Calculate overall discount
+  const overallDiscount = overallDiscountAmount > 0
+    ? overallDiscountType === 'percentage'
+      ? subtotalAfterLineDiscounts * (overallDiscountAmount / 100)
+      : overallDiscountAmount
+    : 0;
+  
+  // Final subtotal after all discounts
+  const subtotal = Math.max(0, subtotalAfterLineDiscounts - overallDiscount);
+  
   const taxAmount = subtotal * (taxRate / 100);
   const total = subtotal + taxAmount;
 
@@ -322,7 +354,7 @@ const CreateInvoice = () => {
               <CardTitle>Pricing</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-3 gap-4">
                 <div>
                   <Label htmlFor="taxRate">Tax Rate (%)</Label>
                   <Input
@@ -345,10 +377,39 @@ const CreateInvoice = () => {
                     onChange={(e) => setDueDays(parseInt(e.target.value) || 30)}
                   />
                 </div>
+                <div>
+                  <Label>Overall Discount</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={overallDiscountAmount || ''}
+                      onChange={(e) => setOverallDiscountAmount(parseFloat(e.target.value) || 0)}
+                      placeholder="0"
+                      className="flex-1"
+                    />
+                    <Select
+                      value={overallDiscountType}
+                      onValueChange={(v) => setOverallDiscountType(v as 'percentage' | 'fixed')}
+                    >
+                      <SelectTrigger className="w-20">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="fixed">$</SelectItem>
+                        <SelectItem value="percentage">%</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
               </div>
 
               <TotalsSummary
-                subtotal={subtotal}
+                subtotal={grossSubtotal}
+                lineItemDiscounts={lineItemDiscounts}
+                overallDiscountType={overallDiscountType}
+                overallDiscountAmount={overallDiscountAmount}
                 taxRate={taxRate}
                 taxAmount={taxAmount}
                 total={total}
