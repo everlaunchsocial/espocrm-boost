@@ -15,6 +15,8 @@ import {
   X,
   ChevronDown,
   FolderOpen,
+  FileText,
+  Receipt,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -36,6 +38,8 @@ const navigation = [
   { name: 'Accounts', href: '/accounts', icon: Building2 },
   { name: 'Leads', href: '/leads', icon: UserPlus },
   { name: 'Deals', href: '/deals', icon: Handshake },
+  { name: 'Estimates', href: '/estimates', icon: FileText },
+  { name: 'Invoices', href: '/invoices', icon: Receipt },
   { name: 'Tasks', href: '/tasks', icon: CheckSquare },
   { name: 'Media Library', href: '/media-library', icon: FolderOpen },
 ];
