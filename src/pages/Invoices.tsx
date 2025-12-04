@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Send, Eye, DollarSign, MoreHorizontal, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
-import { CRMLayout } from '@/components/crm/CRMLayout';
+
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -142,64 +142,58 @@ const Invoices = () => {
   );
 
   if (isLoading) {
-    return (
-      <CRMLayout>
-        <div className="p-6">Loading...</div>
-      </CRMLayout>
-    );
+    return <div className="p-6">Loading...</div>;
   }
 
   return (
-    <CRMLayout>
-      <div className="p-6 space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold">Invoices</h1>
-            <p className="text-muted-foreground">Manage and track customer invoices</p>
-          </div>
-          <Button onClick={() => navigate('/invoices/new')}>
-            <Plus className="h-4 w-4 mr-2" />
-            New Invoice
-          </Button>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold">Invoices</h1>
+          <p className="text-muted-foreground">Manage and track customer invoices</p>
         </div>
-
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'active' | 'paid')}>
-          <TabsList>
-            <TabsTrigger value="active">Active</TabsTrigger>
-            <TabsTrigger value="paid">Paid</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="active" className="mt-4">
-            {invoices.length === 0 ? (
-              <Card>
-                <CardContent className="py-12 text-center">
-                  <DollarSign className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                  <h3 className="text-lg font-medium mb-2">No active invoices</h3>
-                  <p className="text-muted-foreground mb-4">Create your first invoice to get started</p>
-                  <Button onClick={() => navigate('/invoices/new')}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Create Invoice
-                  </Button>
-                </CardContent>
-              </Card>
-            ) : (
-              <InvoiceList invoices={invoices} />
-            )}
-          </TabsContent>
-
-          <TabsContent value="paid" className="mt-4">
-            {invoices.length === 0 ? (
-              <Card>
-                <CardContent className="py-12 text-center">
-                  <p className="text-muted-foreground">No paid invoices yet</p>
-                </CardContent>
-              </Card>
-            ) : (
-              <InvoiceList invoices={invoices} />
-            )}
-          </TabsContent>
-        </Tabs>
+        <Button onClick={() => navigate('/invoices/new')}>
+          <Plus className="h-4 w-4 mr-2" />
+          New Invoice
+        </Button>
       </div>
+
+      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'active' | 'paid')}>
+        <TabsList>
+          <TabsTrigger value="active">Active</TabsTrigger>
+          <TabsTrigger value="paid">Paid</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="active" className="mt-4">
+          {invoices.length === 0 ? (
+            <Card>
+              <CardContent className="py-12 text-center">
+                <DollarSign className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                <h3 className="text-lg font-medium mb-2">No active invoices</h3>
+                <p className="text-muted-foreground mb-4">Create your first invoice to get started</p>
+                <Button onClick={() => navigate('/invoices/new')}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Create Invoice
+                </Button>
+              </CardContent>
+            </Card>
+          ) : (
+            <InvoiceList invoices={invoices} />
+          )}
+        </TabsContent>
+
+        <TabsContent value="paid" className="mt-4">
+          {invoices.length === 0 ? (
+            <Card>
+              <CardContent className="py-12 text-center">
+                <p className="text-muted-foreground">No paid invoices yet</p>
+              </CardContent>
+            </Card>
+          ) : (
+            <InvoiceList invoices={invoices} />
+          )}
+        </TabsContent>
+      </Tabs>
 
       {paymentInvoice && (
         <RecordPaymentModal
@@ -207,7 +201,7 @@ const Invoices = () => {
           onClose={() => setPaymentInvoice(null)}
         />
       )}
-    </CRMLayout>
+    </div>
   );
 };
 
