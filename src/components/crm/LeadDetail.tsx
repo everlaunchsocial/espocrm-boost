@@ -28,6 +28,11 @@ import {
   Send,
   UserCheck,
   Globe,
+  MapPin,
+  Star,
+  Facebook,
+  Instagram,
+  FileText,
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
@@ -202,29 +207,72 @@ export function LeadDetail({ lead, open, onClose, onEdit }: LeadDetailProps) {
             </div>
           </div>
 
-          {/* Lead Information */}
+          {/* Contact Information */}
           <div className="py-4 border-b border-border space-y-3">
-            <p className="text-sm font-medium text-muted-foreground">Lead Information</p>
+            <p className="text-sm font-medium text-muted-foreground">Contact Information</p>
             <div className="grid gap-3">
               <div className="flex items-center gap-3">
                 <User className="h-4 w-4 text-muted-foreground" />
                 <span className="text-sm font-medium">{lead.firstName} {lead.lastName}</span>
                 {lead.title && <span className="text-xs text-muted-foreground">({lead.title})</span>}
               </div>
+              {lead.email && (
+                <div className="flex items-center gap-3">
+                  <Mail className="h-4 w-4 text-muted-foreground" />
+                  <a href={`mailto:${lead.email}`} className="text-sm text-primary hover:underline">{lead.email}</a>
+                </div>
+              )}
+              {lead.phone && (
+                <div className="flex items-center gap-3">
+                  <Phone className="h-4 w-4 text-muted-foreground" />
+                  <a href={`tel:${lead.phone}`} className="text-sm hover:underline">{lead.phone}</a>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Business Information */}
+          <div className="py-4 border-b border-border space-y-3">
+            <p className="text-sm font-medium text-muted-foreground">Business Information</p>
+            <div className="grid gap-3">
               {lead.company && (
                 <div className="flex items-center gap-3">
                   <Building2 className="h-4 w-4 text-muted-foreground" />
                   <span className="text-sm">{lead.company}</span>
                 </div>
               )}
-              <div className="flex items-center gap-3">
-                <Mail className="h-4 w-4 text-muted-foreground" />
-                <a href={`mailto:${lead.email}`} className="text-sm text-primary hover:underline">{lead.email}</a>
-              </div>
-              {lead.phone && (
+              {lead.serviceCategory && (
                 <div className="flex items-center gap-3">
-                  <Phone className="h-4 w-4 text-muted-foreground" />
-                  <a href={`tel:${lead.phone}`} className="text-sm hover:underline">{lead.phone}</a>
+                  <FileText className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm">Category: {lead.serviceCategory}</span>
+                </div>
+              )}
+              {lead.industry && (
+                <div className="flex items-center gap-3">
+                  <Building2 className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm">Industry: {lead.industry}</span>
+                </div>
+              )}
+              {(lead.address || lead.city || lead.state || lead.zipCode) && (
+                <div className="flex items-start gap-3">
+                  <MapPin className="h-4 w-4 text-muted-foreground mt-0.5" />
+                  <div className="text-sm">
+                    {lead.address && <div>{lead.address}</div>}
+                    <div>{[lead.city, lead.state, lead.zipCode].filter(Boolean).join(', ')}</div>
+                  </div>
+                </div>
+              )}
+              {lead.website && (
+                <div className="flex items-center gap-3">
+                  <Globe className="h-4 w-4 text-muted-foreground" />
+                  <a 
+                    href={lead.website.startsWith('http') ? lead.website : `https://${lead.website}`} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-sm text-primary hover:underline"
+                  >
+                    {lead.website}
+                  </a>
                 </div>
               )}
               <div className="flex items-center gap-3">
@@ -233,6 +281,58 @@ export function LeadDetail({ lead, open, onClose, onEdit }: LeadDetailProps) {
               </div>
             </div>
           </div>
+
+          {/* Metrics & Social */}
+          {(lead.googleRating || lead.facebookUrl || lead.instagramHandle) && (
+            <div className="py-4 border-b border-border space-y-3">
+              <p className="text-sm font-medium text-muted-foreground">Metrics & Social</p>
+              <div className="grid gap-3">
+                {lead.googleRating && (
+                  <div className="flex items-center gap-3">
+                    <Star className="h-4 w-4 text-yellow-500" />
+                    <span className="text-sm">
+                      Google Rating: {lead.googleRating}
+                      {lead.googleReviewCount && ` (${lead.googleReviewCount} reviews)`}
+                    </span>
+                  </div>
+                )}
+                {lead.facebookUrl && (
+                  <div className="flex items-center gap-3">
+                    <Facebook className="h-4 w-4 text-muted-foreground" />
+                    <a 
+                      href={lead.facebookUrl.startsWith('http') ? lead.facebookUrl : `https://${lead.facebookUrl}`}
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-sm text-primary hover:underline"
+                    >
+                      Facebook
+                    </a>
+                  </div>
+                )}
+                {lead.instagramHandle && (
+                  <div className="flex items-center gap-3">
+                    <Instagram className="h-4 w-4 text-muted-foreground" />
+                    <a 
+                      href={`https://instagram.com/${lead.instagramHandle.replace('@', '')}`}
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-sm text-primary hover:underline"
+                    >
+                      @{lead.instagramHandle.replace('@', '')}
+                    </a>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Lead Notes */}
+          {lead.notes && (
+            <div className="py-4 border-b border-border space-y-3">
+              <p className="text-sm font-medium text-muted-foreground">Lead Notes</p>
+              <p className="text-sm whitespace-pre-wrap">{lead.notes}</p>
+            </div>
+          )}
 
           {/* Tabs */}
           <Tabs defaultValue="notes" className="mt-4">

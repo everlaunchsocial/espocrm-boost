@@ -67,7 +67,7 @@ export interface Lead {
   phone?: string;
   company?: string;
   title?: string;
-  source: 'web' | 'referral' | 'campaign' | 'social' | 'other';
+  source: 'web' | 'referral' | 'campaign' | 'social' | 'google-leads' | 'other';
   status: 'new' | 'contacted' | 'qualified' | 'unqualified' | 'converted';
   // Address fields
   address?: string;
