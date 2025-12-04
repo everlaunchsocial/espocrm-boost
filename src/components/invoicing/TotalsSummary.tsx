@@ -1,5 +1,8 @@
 interface TotalsSummaryProps {
   subtotal: number;
+  lineItemDiscounts?: number;
+  overallDiscountType?: 'percentage' | 'fixed';
+  overallDiscountAmount?: number;
   taxRate: number;
   taxAmount: number;
   total: number;
@@ -11,6 +14,9 @@ interface TotalsSummaryProps {
 
 export const TotalsSummary = ({
   subtotal,
+  lineItemDiscounts = 0,
+  overallDiscountType,
+  overallDiscountAmount = 0,
   taxRate,
   taxAmount,
   total,
@@ -27,6 +33,16 @@ export const TotalsSummary = ({
     return depositAmount;
   };
 
+  const calculateOverallDiscount = () => {
+    if (!overallDiscountAmount || overallDiscountAmount <= 0) return 0;
+    const subtotalAfterLineDiscounts = subtotal - lineItemDiscounts;
+    if (overallDiscountType === 'percentage') {
+      return subtotalAfterLineDiscounts * (overallDiscountAmount / 100);
+    }
+    return overallDiscountAmount;
+  };
+
+  const overallDiscount = calculateOverallDiscount();
   const balanceDue = amountPaid !== undefined ? total - amountPaid : total;
 
   return (
@@ -35,6 +51,24 @@ export const TotalsSummary = ({
         <span>Subtotal</span>
         <span>${subtotal.toFixed(2)}</span>
       </div>
+      
+      {lineItemDiscounts > 0 && (
+        <div className="flex justify-between text-sm text-orange-600">
+          <span>Line Item Discounts</span>
+          <span>-${lineItemDiscounts.toFixed(2)}</span>
+        </div>
+      )}
+      
+      {overallDiscount > 0 && (
+        <div className="flex justify-between text-sm text-orange-600">
+          <span>
+            Discount
+            {overallDiscountType === 'percentage' && ` (${overallDiscountAmount}%)`}
+          </span>
+          <span>-${overallDiscount.toFixed(2)}</span>
+        </div>
+      )}
+      
       <div className="flex justify-between text-sm">
         <span>Tax ({taxRate}%)</span>
         <span>${taxAmount.toFixed(2)}</span>
