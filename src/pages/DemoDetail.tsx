@@ -9,6 +9,7 @@ import { Separator } from '@/components/ui/separator';
 import { ArrowLeft, Send, Copy, ExternalLink, Eye, MessageSquare, Phone, Loader2, CheckCircle, Image } from 'lucide-react';
 import { useDemos, Demo, DemoStatus } from '@/hooks/useDemos';
 import { toast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 const statusColors: Record<DemoStatus, string> = {
   draft: 'bg-muted text-muted-foreground',
@@ -17,18 +18,25 @@ const statusColors: Record<DemoStatus, string> = {
   engaged: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
 };
 
+interface LinkedEntity {
+  first_name: string;
+  last_name: string;
+  email: string | null;
+}
+
 export default function DemoDetail() {
   const { id } = useParams<{ id: string }>();
   const { getDemoById, sendDemoEmail } = useDemos();
   
   const [demo, setDemo] = useState<Demo | null>(null);
+  const [linkedEntity, setLinkedEntity] = useState<LinkedEntity | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
   // Send email form state
   const [toEmail, setToEmail] = useState('');
   const [toName, setToName] = useState('');
-  const [fromName, setFromName] = useState('');
+  const [fromName, setFromName] = useState('EverLaunch');
   const [sending, setSending] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
 
@@ -37,6 +45,19 @@ export default function DemoDetail() {
       loadDemo();
     }
   }, [id]);
+
+  // Auto-fill form when linkedEntity changes
+  useEffect(() => {
+    if (linkedEntity) {
+      if (linkedEntity.email && !toEmail) {
+        setToEmail(linkedEntity.email);
+      }
+      const fullName = [linkedEntity.first_name, linkedEntity.last_name].filter(Boolean).join(' ');
+      if (fullName && !toName) {
+        setToName(fullName);
+      }
+    }
+  }, [linkedEntity]);
 
   const loadDemo = async () => {
     if (!id) return;
@@ -48,20 +69,85 @@ export default function DemoDetail() {
     
     if (result.error) {
       setError(result.error);
-    } else {
-      setDemo(result.data);
+      setLoading(false);
+      return;
+    }
+    
+    const demoData = result.data;
+    setDemo(demoData);
+    
+    // Fetch linked lead or contact data
+    if (demoData) {
+      await loadLinkedEntity(demoData);
     }
     
     setLoading(false);
   };
 
+  const loadLinkedEntity = async (demoData: Demo) => {
+    try {
+      if (demoData.lead_id) {
+        const { data: lead, error: leadError } = await supabase
+          .from('leads')
+          .select('first_name, last_name, email')
+          .eq('id', demoData.lead_id)
+          .single();
+        
+        if (!leadError && lead) {
+          setLinkedEntity(lead);
+        }
+      } else if (demoData.contact_id) {
+        const { data: contact, error: contactError } = await supabase
+          .from('contacts')
+          .select('first_name, last_name, email')
+          .eq('id', demoData.contact_id)
+          .single();
+        
+        if (!contactError && contact) {
+          setLinkedEntity(contact);
+        }
+      }
+    } catch (err) {
+      console.error('Error loading linked entity:', err);
+    }
+  };
+
   const handleSendEmail = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!demo || !toEmail.trim()) {
+    if (!demo) {
+      toast({
+        title: 'Error',
+        description: 'Demo data not loaded.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (!toEmail.trim()) {
       toast({
         title: 'Email required',
         description: 'Please enter a recipient email address.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(toEmail.trim())) {
+      toast({
+        title: 'Invalid email',
+        description: 'Please enter a valid email address.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (!fromName.trim()) {
+      toast({
+        title: 'From name required',
+        description: 'Please enter a sender name.',
         variant: 'destructive',
       });
       return;
@@ -71,7 +157,7 @@ export default function DemoDetail() {
     
     const result = await sendDemoEmail(demo.id, toEmail.trim(), {
       toName: toName.trim() || undefined,
-      fromName: fromName.trim() || undefined,
+      fromName: fromName.trim(),
       baseUrl: window.location.origin,
     });
     
@@ -79,21 +165,17 @@ export default function DemoDetail() {
     
     if (result.error) {
       toast({
-        title: 'Failed to send email',
+        title: 'Failed to send demo email',
         description: result.error,
         variant: 'destructive',
       });
     } else {
       toast({
         title: 'Demo email sent!',
-        description: `Email sent to ${toEmail}`,
+        description: `Email successfully sent to ${toEmail}`,
       });
       // Refresh demo data to show updated status
       loadDemo();
-      // Clear form
-      setToEmail('');
-      setToName('');
-      setFromName('');
     }
   };
 
@@ -321,7 +403,7 @@ export default function DemoDetail() {
                 <Input
                   id="toEmail"
                   type="email"
-                  placeholder="prospect@example.com"
+                  placeholder="Enter recipient email"
                   value={toEmail}
                   onChange={(e) => setToEmail(e.target.value)}
                   required
@@ -335,7 +417,7 @@ export default function DemoDetail() {
                 <Input
                   id="toName"
                   type="text"
-                  placeholder="John Smith"
+                  placeholder="Recipient name"
                   value={toName}
                   onChange={(e) => setToName(e.target.value)}
                 />
@@ -343,18 +425,23 @@ export default function DemoDetail() {
 
               <div className="space-y-2">
                 <Label htmlFor="fromName" className="text-sm">
-                  From Name <span className="text-muted-foreground">(optional)</span>
+                  From Name <span className="text-destructive">*</span>
                 </Label>
                 <Input
                   id="fromName"
                   type="text"
-                  placeholder="Jane from EverLaunch"
+                  placeholder="Your name or company"
                   value={fromName}
                   onChange={(e) => setFromName(e.target.value)}
+                  required
                 />
               </div>
 
-              <Button type="submit" className="w-full" disabled={sending || !toEmail.trim()}>
+              <Button 
+                type="submit" 
+                className="w-full" 
+                disabled={sending || !toEmail.trim() || !fromName.trim()}
+              >
                 {sending ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
