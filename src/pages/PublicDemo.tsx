@@ -445,6 +445,31 @@ const PublicDemo = () => {
 
           {/* Right Column - Demo Area */}
           <div className="space-y-6">
+            {/* Website Screenshot Preview */}
+            {demo.screenshot_url && (
+              <Card className="overflow-hidden">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">
+                    Website Preview
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-0">
+                  <a
+                    href={demo.website_url?.startsWith('http') ? demo.website_url : `https://${demo.website_url}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block"
+                  >
+                    <img
+                      src={demo.screenshot_url}
+                      alt={`Homepage preview for ${demo.business_name}`}
+                      className="w-full h-auto rounded-b-lg hover:opacity-90 transition-opacity"
+                    />
+                  </a>
+                </CardContent>
+              </Card>
+            )}
+
             {/* Phone Mockup Area */}
             <Card className="overflow-hidden">
               <div className="bg-gradient-to-br from-muted to-muted/50 p-8 text-center">

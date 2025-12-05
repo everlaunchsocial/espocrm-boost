@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { ArrowLeft, Send, Copy, ExternalLink, Eye, MessageSquare, Phone, Loader2, CheckCircle } from 'lucide-react';
+import { ArrowLeft, Send, Copy, ExternalLink, Eye, MessageSquare, Phone, Loader2, CheckCircle, Image } from 'lucide-react';
 import { useDemos, Demo, DemoStatus } from '@/hooks/useDemos';
 import { toast } from '@/hooks/use-toast';
 
@@ -243,6 +243,30 @@ export default function DemoDetail() {
                   </div>
                 </div>
               </div>
+            </div>
+            {/* Website Screenshot Preview */}
+            <Separator />
+            <div>
+              <Label className="text-muted-foreground text-sm mb-2 block">Website Preview</Label>
+              {demo.screenshot_url ? (
+                <a
+                  href={demo.screenshot_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block"
+                >
+                  <img
+                    src={demo.screenshot_url}
+                    alt={`Homepage preview for ${demo.business_name}`}
+                    className="rounded-lg border border-border shadow-sm hover:shadow-md transition-shadow cursor-pointer max-w-full h-auto"
+                  />
+                </a>
+              ) : (
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Image className="h-4 w-4" />
+                  <span className="text-sm">Screenshot not available for this demo.</span>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>

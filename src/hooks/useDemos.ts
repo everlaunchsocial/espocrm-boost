@@ -420,6 +420,48 @@ export const useDemos = () => {
     }
   };
 
+  /**
+   * Generate and update screenshot URL for a demo
+   */
+  const captureScreenshot = async (demoId: string, websiteUrl: string): Promise<DemoResult<Demo>> => {
+    try {
+      console.log('Capturing screenshot for demo:', demoId, 'URL:', websiteUrl);
+      
+      const { data, error: invokeError } = await supabase.functions.invoke('demo-screenshot', {
+        body: { url: websiteUrl }
+      });
+
+      if (invokeError) {
+        console.error('Error invoking demo-screenshot:', invokeError);
+        return { data: null, error: `Failed to capture screenshot: ${invokeError.message}` };
+      }
+
+      if (!data?.success || !data?.screenshot_url) {
+        console.error('Screenshot function returned error:', data?.error);
+        return { data: null, error: data?.error || 'Failed to generate screenshot' };
+      }
+
+      // Update the demo with the screenshot URL
+      const { data: updatedDemo, error: updateError } = await supabase
+        .from('demos')
+        .update({ screenshot_url: data.screenshot_url })
+        .eq('id', demoId)
+        .select()
+        .single();
+
+      if (updateError) {
+        console.error('Error updating demo with screenshot:', updateError);
+        return { data: null, error: `Failed to save screenshot: ${updateError.message}` };
+      }
+
+      console.log('Screenshot captured and saved successfully');
+      return { data: updatedDemo as Demo, error: null };
+    } catch (err) {
+      console.error('Unexpected error capturing screenshot:', err);
+      return { data: null, error: 'An unexpected error occurred while capturing screenshot' };
+    }
+  };
+
   return {
     createDemo,
     getDemoById,
@@ -431,6 +473,7 @@ export const useDemos = () => {
     incrementChatInteraction,
     incrementVoiceInteraction,
     sendDemoEmail,
+    captureScreenshot,
   };
 };
 
