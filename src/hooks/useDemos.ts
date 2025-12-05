@@ -373,6 +373,53 @@ export const useDemos = () => {
     }
   };
 
+  /**
+   * Send demo invitation email to prospect
+   */
+  const sendDemoEmail = async (
+    demoId: string,
+    toEmail: string,
+    options?: {
+      toName?: string;
+      fromName?: string;
+      baseUrl?: string;
+    }
+  ): Promise<DemoResult<{ demoUrl: string; status: string }>> => {
+    try {
+      const { data, error } = await supabase.functions.invoke('send-demo-email', {
+        body: {
+          demoId,
+          toEmail,
+          toName: options?.toName,
+          fromName: options?.fromName,
+          baseUrl: options?.baseUrl,
+        }
+      });
+
+      if (error) {
+        console.error('Error invoking send-demo-email:', error);
+        return { data: null, error: `Failed to send demo email: ${error.message}` };
+      }
+
+      if (!data?.success) {
+        const errorMessage = data?.error || 'Unknown error sending demo email';
+        console.error('send-demo-email returned error:', errorMessage);
+        return { data: null, error: errorMessage };
+      }
+
+      return {
+        data: {
+          demoUrl: data.demoUrl,
+          status: data.status,
+        },
+        error: null,
+      };
+    } catch (err) {
+      console.error('Unexpected error sending demo email:', err);
+      return { data: null, error: 'An unexpected error occurred while sending demo email' };
+    }
+  };
+
   return {
     createDemo,
     getDemoById,
@@ -382,7 +429,8 @@ export const useDemos = () => {
     updateDemoStatus,
     incrementViewCount,
     incrementChatInteraction,
-    incrementVoiceInteraction
+    incrementVoiceInteraction,
+    sendDemoEmail,
   };
 };
 

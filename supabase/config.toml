@@ -26,3 +26,12 @@ verify_jwt = false
 
 [functions.voice-tool-handler]
 verify_jwt = false
+
+[functions.send-estimate]
+verify_jwt = false
+
+[functions.send-invoice]
+verify_jwt = false
+
+[functions.send-demo-email]
+verify_jwt = false
