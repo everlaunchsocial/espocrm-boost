@@ -23,3 +23,6 @@ verify_jwt = false
 
 [functions.elevenlabs-session]
 verify_jwt = false
+
+[functions.voice-tool-handler]
+verify_jwt = false

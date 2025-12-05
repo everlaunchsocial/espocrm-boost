@@ -58,14 +58,14 @@ export const VoiceWidget = ({ businessInfo, disabled, provider = 'openai' }: Voi
         throw new Error("Failed to get session token");
       }
 
-      // Initialize WebRTC connection
+      // Initialize WebRTC connection with business info for tool execution
       openaiChatRef.current = new RealtimeChat(
         handleMessage,
         handleSpeakingChange,
         handleTranscript
       );
 
-      await openaiChatRef.current.init(data.client_secret.value);
+      await openaiChatRef.current.init(data.client_secret.value, data.businessInfo || businessInfo);
       return true;
     } catch (error) {
       console.error('Error starting OpenAI conversation:', error);

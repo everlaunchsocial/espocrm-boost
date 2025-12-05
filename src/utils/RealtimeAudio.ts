@@ -1,3 +1,5 @@
+import { supabase } from "@/integrations/supabase/client";
+
 export class AudioRecorder {
   private stream: MediaStream | null = null;
   private audioContext: AudioContext | null = null;
@@ -80,6 +82,16 @@ export const encodeAudioForAPI = (float32Array: Float32Array): string => {
   return btoa(binary);
 };
 
+interface BusinessInfo {
+  businessName?: string;
+  services?: string[];
+  description?: string;
+  phones?: string[];
+  emails?: string[];
+  hours?: string;
+  address?: string;
+}
+
 export class RealtimeChat {
   private pc: RTCPeerConnection | null = null;
   private dc: RTCDataChannel | null = null;
@@ -87,6 +99,8 @@ export class RealtimeChat {
   private onMessage: (message: any) => void;
   private onSpeakingChange: (speaking: boolean) => void;
   private onTranscript: (text: string, isFinal: boolean) => void;
+  private businessInfo: BusinessInfo | null = null;
+  private pendingToolCalls: Map<string, any> = new Map();
 
   constructor(
     onMessage: (message: any) => void,
@@ -100,9 +114,10 @@ export class RealtimeChat {
     this.audioEl.autoplay = true;
   }
 
-  async init(ephemeralKey: string) {
+  async init(ephemeralKey: string, businessInfo?: BusinessInfo) {
     try {
       console.log('Initializing WebRTC connection...');
+      this.businessInfo = businessInfo || null;
 
       // Create peer connection
       this.pc = new RTCPeerConnection();
@@ -175,7 +190,7 @@ export class RealtimeChat {
     }
   }
 
-  private handleEvent(event: any) {
+  private async handleEvent(event: any) {
     this.onMessage(event);
 
     switch (event.type) {
@@ -200,10 +215,93 @@ export class RealtimeChat {
       case 'conversation.item.input_audio_transcription.completed':
         console.log('User said:', event.transcript);
         break;
+      
+      // Handle tool calls
+      case 'response.function_call_arguments.delta':
+        // Accumulate function call arguments
+        const callId = event.call_id;
+        if (!this.pendingToolCalls.has(callId)) {
+          this.pendingToolCalls.set(callId, { 
+            name: event.name || '', 
+            arguments: '' 
+          });
+        }
+        const pending = this.pendingToolCalls.get(callId)!;
+        if (event.name) pending.name = event.name;
+        pending.arguments += event.delta || '';
+        break;
+
+      case 'response.function_call_arguments.done':
+        // Execute the tool call
+        console.log('Function call complete:', event.call_id, event.name, event.arguments);
+        await this.executeToolCall(event.call_id, event.name, event.arguments);
+        this.pendingToolCalls.delete(event.call_id);
+        break;
+
       case 'error':
         console.error('Realtime API error:', event.error);
         break;
     }
+  }
+
+  private async executeToolCall(callId: string, toolName: string, argsString: string) {
+    try {
+      console.log(`Executing tool: ${toolName}`);
+      
+      let args: any;
+      try {
+        args = JSON.parse(argsString);
+      } catch (e) {
+        console.error('Failed to parse tool arguments:', argsString);
+        args = {};
+      }
+
+      // Call the edge function to execute the tool
+      const { data, error } = await supabase.functions.invoke('voice-tool-handler', {
+        body: {
+          tool_name: toolName,
+          arguments: args,
+          businessInfo: this.businessInfo
+        }
+      });
+
+      if (error) {
+        console.error('Tool execution error:', error);
+        this.sendToolResult(callId, { error: error.message });
+        return;
+      }
+
+      console.log('Tool result:', data);
+      this.sendToolResult(callId, data.result);
+
+    } catch (error) {
+      console.error('Error executing tool:', error);
+      this.sendToolResult(callId, { error: 'Failed to execute tool' });
+    }
+  }
+
+  private sendToolResult(callId: string, result: any) {
+    if (!this.dc || this.dc.readyState !== 'open') {
+      console.error('Data channel not ready for tool result');
+      return;
+    }
+
+    // Send the tool result back to the conversation
+    const toolResultEvent = {
+      type: 'conversation.item.create',
+      item: {
+        type: 'function_call_output',
+        call_id: callId,
+        output: JSON.stringify(result)
+      }
+    };
+
+    this.dc.send(JSON.stringify(toolResultEvent));
+    
+    // Trigger a response after the tool result
+    this.dc.send(JSON.stringify({ type: 'response.create' }));
+    
+    console.log('Tool result sent:', callId);
   }
 
   sendTextMessage(text: string) {
@@ -242,6 +340,7 @@ export class RealtimeChat {
       (this.audioEl.srcObject as MediaStream).getTracks().forEach(t => t.stop());
       this.audioEl.srcObject = null;
     }
+    this.pendingToolCalls.clear();
     console.log('Disconnected from realtime API');
   }
 }
