@@ -34,6 +34,22 @@ serve(async (req) => {
       systemPrompt += `About the business: ${businessInfo.description.substring(0, 200)}. `;
     }
 
+    // Add business hours if available
+    if (businessInfo?.hours) {
+      systemPrompt += `Business hours: ${businessInfo.hours}. `;
+    }
+
+    // Add contact info
+    if (businessInfo?.phones?.length > 0) {
+      systemPrompt += `Phone: ${businessInfo.phones[0]}. `;
+    }
+    if (businessInfo?.emails?.length > 0) {
+      systemPrompt += `Email: ${businessInfo.emails[0]}. `;
+    }
+    if (businessInfo?.address) {
+      systemPrompt += `Address: ${businessInfo.address}. `;
+    }
+
     systemPrompt += `
 Your job is to:
 - Greet callers warmly and professionally
@@ -43,12 +59,91 @@ Your job is to:
 - Be helpful, friendly, and conversational
 - Keep responses concise and natural for voice conversation
 
-If you don't know specific details, politely say you'd be happy to have someone call them back with that information.
+IMPORTANT - You have tools available to help callers:
+- When someone asks for information to be sent to them (email with hours, services, etc.), use the send_email tool
+- When someone wants a callback, use the schedule_callback tool to log their request
+- When asked about business hours, you can answer directly from your knowledge OR use get_business_info for accurate details
+
+If you don't know specific details, politely say you'd be happy to have someone call them back with that information, and offer to schedule a callback.
 `;
 
-    console.log('Creating realtime session with prompt:', systemPrompt.substring(0, 200) + '...');
+    console.log('Creating realtime session with tools...');
 
-    // Request an ephemeral token from OpenAI
+    // Define tools for the AI to use
+    const tools = [
+      {
+        type: "function",
+        name: "send_email",
+        description: "Send an email to the caller with requested information like business hours, services, pricing, or any other details they asked for. Use this when someone says 'send me an email' or 'can you email me that information'.",
+        parameters: {
+          type: "object",
+          properties: {
+            recipient_email: {
+              type: "string",
+              description: "The email address to send to. Ask the caller for their email if not provided."
+            },
+            subject: {
+              type: "string",
+              description: "The email subject line"
+            },
+            content: {
+              type: "string",
+              description: "The email body content - include all the information the caller requested"
+            },
+            caller_name: {
+              type: "string",
+              description: "The caller's name if they provided it"
+            }
+          },
+          required: ["recipient_email", "subject", "content"]
+        }
+      },
+      {
+        type: "function",
+        name: "schedule_callback",
+        description: "Schedule a callback request when someone wants the business to call them back. Use this when someone says 'have someone call me' or 'I'd like a callback'.",
+        parameters: {
+          type: "object",
+          properties: {
+            caller_name: {
+              type: "string",
+              description: "The caller's name"
+            },
+            phone_number: {
+              type: "string",
+              description: "The phone number to call back"
+            },
+            preferred_time: {
+              type: "string",
+              description: "When they'd like to be called back (e.g., 'tomorrow morning', 'after 3pm')"
+            },
+            reason: {
+              type: "string",
+              description: "What they want to discuss"
+            }
+          },
+          required: ["caller_name", "phone_number"]
+        }
+      },
+      {
+        type: "function",
+        name: "get_business_info",
+        description: "Get accurate business information like hours, address, services. Use this to provide accurate details to callers.",
+        parameters: {
+          type: "object",
+          properties: {
+            info_type: {
+              type: "string",
+              enum: ["hours", "address", "services", "contact", "all"],
+              description: "What type of information to retrieve"
+            }
+          },
+          required: ["info_type"]
+        }
+      }
+    ];
+
+    // Request an ephemeral token from OpenAI with tools configured
     const response = await fetch("https://api.openai.com/v1/realtime/sessions", {
       method: "POST",
       headers: {
@@ -69,7 +164,9 @@ If you don't know specific details, politely say you'd be happy to have someone 
           threshold: 0.5,
           prefix_padding_ms: 300,
           silence_duration_ms: 800
-        }
+        },
+        tools: tools,
+        tool_choice: "auto"
       }),
     });
 
@@ -80,9 +177,13 @@ If you don't know specific details, politely say you'd be happy to have someone 
     }
 
     const data = await response.json();
-    console.log("Realtime session created successfully");
+    console.log("Realtime session created with tools");
 
-    return new Response(JSON.stringify(data), {
+    // Include business info in response so frontend can use it for tool execution
+    return new Response(JSON.stringify({
+      ...data,
+      businessInfo: businessInfo
+    }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {
