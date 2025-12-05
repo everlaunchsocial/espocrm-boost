@@ -274,6 +274,102 @@ export type Database = {
           },
         ]
       }
+      demos: {
+        Row: {
+          ai_persona_name: string | null
+          ai_prompt: string | null
+          avatar_url: string | null
+          business_name: string
+          chat_interaction_count: number
+          chat_primary_color: string | null
+          chat_title: string | null
+          contact_id: string | null
+          created_at: string
+          elevenlabs_agent_id: string | null
+          email_sent_at: string | null
+          first_viewed_at: string | null
+          id: string
+          last_viewed_at: string | null
+          lead_id: string | null
+          rep_id: string | null
+          screenshot_url: string | null
+          status: string
+          updated_at: string
+          vapi_assistant_id: string | null
+          view_count: number
+          voice_interaction_count: number
+          voice_provider: string
+          website_url: string | null
+        }
+        Insert: {
+          ai_persona_name?: string | null
+          ai_prompt?: string | null
+          avatar_url?: string | null
+          business_name: string
+          chat_interaction_count?: number
+          chat_primary_color?: string | null
+          chat_title?: string | null
+          contact_id?: string | null
+          created_at?: string
+          elevenlabs_agent_id?: string | null
+          email_sent_at?: string | null
+          first_viewed_at?: string | null
+          id?: string
+          last_viewed_at?: string | null
+          lead_id?: string | null
+          rep_id?: string | null
+          screenshot_url?: string | null
+          status?: string
+          updated_at?: string
+          vapi_assistant_id?: string | null
+          view_count?: number
+          voice_interaction_count?: number
+          voice_provider?: string
+          website_url?: string | null
+        }
+        Update: {
+          ai_persona_name?: string | null
+          ai_prompt?: string | null
+          avatar_url?: string | null
+          business_name?: string
+          chat_interaction_count?: number
+          chat_primary_color?: string | null
+          chat_title?: string | null
+          contact_id?: string | null
+          created_at?: string
+          elevenlabs_agent_id?: string | null
+          email_sent_at?: string | null
+          first_viewed_at?: string | null
+          id?: string
+          last_viewed_at?: string | null
+          lead_id?: string | null
+          rep_id?: string | null
+          screenshot_url?: string | null
+          status?: string
+          updated_at?: string
+          vapi_assistant_id?: string | null
+          view_count?: number
+          voice_interaction_count?: number
+          voice_provider?: string
+          website_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "demos_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "demos_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       emails: {
         Row: {
           body: string
