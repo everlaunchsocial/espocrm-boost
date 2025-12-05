@@ -34,7 +34,7 @@ export function DemoCreationModal({
   defaultWebsiteUrl = '',
 }: DemoCreationModalProps) {
   const navigate = useNavigate();
-  const { createDemo } = useDemos();
+  const { createDemo, captureScreenshot } = useDemos();
 
   const [businessName, setBusinessName] = useState(defaultBusinessName);
   const [websiteUrl, setWebsiteUrl] = useState(defaultWebsiteUrl);
@@ -97,6 +97,17 @@ export function DemoCreationModal({
         toast.success('Demo created successfully');
         onClose();
         navigate(`/demos/${result.data.id}`);
+        
+        // Asynchronously capture screenshot after navigation (non-blocking)
+        if (websiteUrl.trim()) {
+          captureScreenshot(result.data.id, websiteUrl.trim()).then((screenshotResult) => {
+            if (screenshotResult.error) {
+              console.log('Screenshot capture failed (non-fatal):', screenshotResult.error);
+            } else {
+              console.log('Screenshot captured successfully for demo:', result.data?.id);
+            }
+          });
+        }
       }
     } catch (err) {
       console.error('Failed to create demo:', err);
