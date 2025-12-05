@@ -2,8 +2,6 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "https://esm.sh/resend@4.0.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
-
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -14,7 +12,7 @@ interface SendDemoEmailRequest {
   toEmail: string;
   toName?: string;
   fromName?: string;
-  baseUrl?: string; // Optional override for demo base URL
+  baseUrl?: string;
 }
 
 serve(async (req: Request): Promise<Response> => {
@@ -24,9 +22,32 @@ serve(async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { demoId, toEmail, toName, fromName, baseUrl }: SendDemoEmailRequest = await req.json();
+    // Check for RESEND_API_KEY first
+    const resendApiKey = Deno.env.get("RESEND_API_KEY");
+    if (!resendApiKey) {
+      console.error("RESEND_API_KEY environment variable is not set");
+      return new Response(
+        JSON.stringify({ success: false, error: "Email service not configured. Please set RESEND_API_KEY." }),
+        { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
 
-    console.log("Send demo email request:", { demoId, toEmail, toName, fromName });
+    const resend = new Resend(resendApiKey);
+
+    let requestBody: SendDemoEmailRequest;
+    try {
+      requestBody = await req.json();
+    } catch (parseError) {
+      console.error("Failed to parse request body:", parseError);
+      return new Response(
+        JSON.stringify({ success: false, error: "Invalid JSON in request body" }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    const { demoId, toEmail, toName, fromName, baseUrl } = requestBody;
+
+    console.log("Send demo email request:", { demoId, toEmail, toName, fromName, baseUrl });
 
     // Validate required fields
     if (!demoId) {
@@ -43,9 +64,27 @@ serve(async (req: Request): Promise<Response> => {
       );
     }
 
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(toEmail)) {
+      return new Response(
+        JSON.stringify({ success: false, error: "Invalid email format for toEmail" }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
     // Create Supabase client
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    
+    if (!supabaseUrl || !supabaseKey) {
+      console.error("Missing Supabase configuration");
+      return new Response(
+        JSON.stringify({ success: false, error: "Database service not configured" }),
+        { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     // Load demo from database
@@ -55,8 +94,16 @@ serve(async (req: Request): Promise<Response> => {
       .eq("id", demoId)
       .single();
 
-    if (demoError || !demo) {
-      console.error("Demo not found:", demoError);
+    if (demoError) {
+      console.error("Database error loading demo:", demoError);
+      return new Response(
+        JSON.stringify({ success: false, error: "Failed to load demo from database" }),
+        { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    if (!demo) {
+      console.error("Demo not found:", demoId);
       return new Response(
         JSON.stringify({ success: false, error: "Demo not found" }),
         { status: 404, headers: { "Content-Type": "application/json", ...corsHeaders } }
@@ -65,11 +112,22 @@ serve(async (req: Request): Promise<Response> => {
 
     console.log("Found demo:", { id: demo.id, business_name: demo.business_name, status: demo.status });
 
-    // Build demo URL
-    // Priority: 1) baseUrl from request, 2) PUBLIC_DEMO_BASE_URL env, 3) derive from Supabase URL
-    const publicBaseUrl = baseUrl || Deno.env.get("PUBLIC_DEMO_BASE_URL") || `https://${supabaseUrl.replace('https://', '').replace('.supabase.co', '')}.lovable.app`;
+    // Build demo URL - use baseUrl from request, or PUBLIC_DEMO_BASE_URL env var
+    let publicBaseUrl = baseUrl;
+    if (!publicBaseUrl) {
+      publicBaseUrl = Deno.env.get("PUBLIC_DEMO_BASE_URL");
+    }
+    if (!publicBaseUrl) {
+      // Fallback: try to construct from Supabase project ID
+      const projectRef = supabaseUrl.match(/https:\/\/([^.]+)\.supabase\.co/)?.[1];
+      if (projectRef) {
+        publicBaseUrl = `https://${projectRef}.lovable.app`;
+      } else {
+        publicBaseUrl = "https://everlaunch.ai";
+      }
+    }
+    
     const demoUrl = `${publicBaseUrl.replace(/\/$/, '')}/demo/${demoId}`;
-
     console.log("Demo URL:", demoUrl);
 
     // Build email content
@@ -164,20 +222,29 @@ serve(async (req: Request): Promise<Response> => {
     `;
 
     // Send email via Resend
+    console.log("Sending email via Resend...");
+    console.log("From:", `${senderName} <onboarding@resend.dev>`);
+    console.log("To:", toEmail);
+
     const emailResponse = await resend.emails.send({
-      from: `${senderName} <info@everlaunch.ai>`,
+      from: `${senderName} <onboarding@resend.dev>`,
       to: toName ? [`${toName} <${toEmail}>`] : [toEmail],
       subject: emailSubject,
       html: emailHtml,
     });
 
-    console.log("Resend response:", emailResponse);
+    console.log("Resend response:", JSON.stringify(emailResponse, null, 2));
 
     if (emailResponse.error) {
       console.error("Resend error:", emailResponse.error);
+      const errorMessage = emailResponse.error.message || "Email provider returned an error";
       return new Response(
-        JSON.stringify({ success: false, error: emailResponse.error.message }),
-        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        JSON.stringify({ 
+          success: false, 
+          error: `Failed to send email: ${errorMessage}`,
+          details: emailResponse.error
+        }),
+        { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
 
@@ -200,8 +267,7 @@ serve(async (req: Request): Promise<Response> => {
 
     if (updateError) {
       console.error("Error updating demo:", updateError);
-      // Email was sent successfully, so we don't fail the request
-      // but log the error
+      // Email was sent successfully, so we don't fail the request but log the error
     }
 
     const finalStatus = updatedDemo?.status || demo.status;
@@ -224,10 +290,11 @@ serve(async (req: Request): Promise<Response> => {
       { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
     );
 
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
     console.error("Error in send-demo-email function:", error);
     return new Response(
-      JSON.stringify({ success: false, error: error.message }),
+      JSON.stringify({ success: false, error: errorMessage }),
       { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
     );
   }
