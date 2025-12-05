@@ -1,12 +1,17 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { DataTable } from '@/components/crm/DataTable';
 import { StatusBadge } from '@/components/crm/StatusBadge';
 import { Button } from '@/components/ui/button';
-import { Plus, Globe, Eye, MessageCircle, Mic } from 'lucide-react';
-import { useDemos, Demo } from '@/hooks/useDemos';
+import { Card, CardContent } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Plus, Globe, Eye, MessageCircle, Mic, FileText, Send, Users, Sparkles } from 'lucide-react';
+import { useDemos, Demo, DemoStatus } from '@/hooks/useDemos';
 import { supabase } from '@/integrations/supabase/client';
-import { format } from 'date-fns';
+import { format, subDays, isAfter } from 'date-fns';
+
+type VoiceProviderFilter = 'all' | 'openai' | 'elevenlabs';
+type DateRangeFilter = 'all' | '7days' | '30days';
 
 export default function Demos() {
   const navigate = useNavigate();
@@ -14,6 +19,11 @@ export default function Demos() {
   const [demos, setDemos] = useState<Demo[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Filter state
+  const [statusFilter, setStatusFilter] = useState<DemoStatus | 'all'>('all');
+  const [voiceProviderFilter, setVoiceProviderFilter] = useState<VoiceProviderFilter>('all');
+  const [dateRangeFilter, setDateRangeFilter] = useState<DateRangeFilter>('all');
 
   // Fetch all demos on mount
   useEffect(() => {
@@ -44,6 +54,58 @@ export default function Demos() {
 
     fetchDemos();
   }, []);
+
+  // Filtered demos based on filter state
+  const filteredDemos = useMemo(() => {
+    let result = demos;
+
+    // Status filter
+    if (statusFilter !== 'all') {
+      result = result.filter(demo => demo.status === statusFilter);
+    }
+
+    // Voice provider filter
+    if (voiceProviderFilter !== 'all') {
+      result = result.filter(demo => demo.voice_provider === voiceProviderFilter);
+    }
+
+    // Date range filter
+    if (dateRangeFilter !== 'all') {
+      const daysAgo = dateRangeFilter === '7days' ? 7 : 30;
+      const cutoffDate = subDays(new Date(), daysAgo);
+      result = result.filter(demo => isAfter(new Date(demo.created_at), cutoffDate));
+    }
+
+    return result;
+  }, [demos, statusFilter, voiceProviderFilter, dateRangeFilter]);
+
+  // Stats calculations (from all demos, not filtered)
+  const stats = useMemo(() => {
+    const sevenDaysAgo = subDays(new Date(), 7);
+    
+    const sentThisWeek = demos.filter(demo => 
+      demo.email_sent_at && isAfter(new Date(demo.email_sent_at), sevenDaysAgo)
+    ).length;
+
+    const viewedThisWeek = demos.filter(demo => 
+      demo.status !== 'draft' && 
+      demo.first_viewed_at && 
+      isAfter(new Date(demo.first_viewed_at), sevenDaysAgo)
+    ).length;
+
+    const engagedThisWeek = demos.filter(demo => 
+      demo.status === 'engaged' &&
+      demo.updated_at &&
+      isAfter(new Date(demo.updated_at), sevenDaysAgo)
+    ).length;
+
+    return {
+      total: demos.length,
+      sentThisWeek,
+      viewedThisWeek,
+      engagedThisWeek,
+    };
+  }, [demos]);
 
   const columns = [
     {
@@ -189,6 +251,7 @@ export default function Demos() {
 
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-semibold text-foreground">AI Demos</h1>
@@ -200,8 +263,130 @@ export default function Demos() {
         </Button>
       </div>
 
+      {/* Stats Row */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <Card>
+          <CardContent className="pt-4 pb-4">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                <FileText className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <p className="text-2xl font-semibold">{stats.total}</p>
+                <p className="text-xs text-muted-foreground">Total Demos</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-4 pb-4">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                <Send className="h-5 w-5 text-blue-500" />
+              </div>
+              <div>
+                <p className="text-2xl font-semibold">{stats.sentThisWeek}</p>
+                <p className="text-xs text-muted-foreground">Sent This Week</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-4 pb-4">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-lg bg-yellow-500/10 flex items-center justify-center">
+                <Users className="h-5 w-5 text-yellow-500" />
+              </div>
+              <div>
+                <p className="text-2xl font-semibold">{stats.viewedThisWeek}</p>
+                <p className="text-xs text-muted-foreground">Viewed This Week</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-4 pb-4">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-lg bg-green-500/10 flex items-center justify-center">
+                <Sparkles className="h-5 w-5 text-green-500" />
+              </div>
+              <div>
+                <p className="text-2xl font-semibold">{stats.engagedThisWeek}</p>
+                <p className="text-xs text-muted-foreground">Engaged This Week</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Filter Bar */}
+      <div className="flex flex-wrap items-center gap-3 p-4 bg-muted/30 rounded-lg border">
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium text-muted-foreground">Status:</span>
+          <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as DemoStatus | 'all')}>
+            <SelectTrigger className="w-[130px] h-9">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All</SelectItem>
+              <SelectItem value="draft">Draft</SelectItem>
+              <SelectItem value="sent">Sent</SelectItem>
+              <SelectItem value="viewed">Viewed</SelectItem>
+              <SelectItem value="engaged">Engaged</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium text-muted-foreground">Voice:</span>
+          <Select value={voiceProviderFilter} onValueChange={(v) => setVoiceProviderFilter(v as VoiceProviderFilter)}>
+            <SelectTrigger className="w-[130px] h-9">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All</SelectItem>
+              <SelectItem value="openai">OpenAI</SelectItem>
+              <SelectItem value="elevenlabs">ElevenLabs</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium text-muted-foreground">Created:</span>
+          <Select value={dateRangeFilter} onValueChange={(v) => setDateRangeFilter(v as DateRangeFilter)}>
+            <SelectTrigger className="w-[140px] h-9">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Time</SelectItem>
+              <SelectItem value="7days">Last 7 Days</SelectItem>
+              <SelectItem value="30days">Last 30 Days</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        {(statusFilter !== 'all' || voiceProviderFilter !== 'all' || dateRangeFilter !== 'all') && (
+          <Button 
+            variant="ghost" 
+            size="sm"
+            onClick={() => {
+              setStatusFilter('all');
+              setVoiceProviderFilter('all');
+              setDateRangeFilter('all');
+            }}
+            className="text-muted-foreground hover:text-foreground"
+          >
+            Clear Filters
+          </Button>
+        )}
+
+        <span className="ml-auto text-sm text-muted-foreground">
+          Showing {filteredDemos.length} of {demos.length} demos
+        </span>
+      </div>
+
       <DataTable
-        data={demos}
+        data={filteredDemos}
         columns={columns}
         searchPlaceholder="Search demos..."
         searchKeys={['business_name', 'website_url', 'ai_persona_name']}
