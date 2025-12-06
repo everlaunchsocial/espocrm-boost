@@ -245,13 +245,13 @@ const Sales = () => {
                       <div className="flex items-start gap-3">
                         <div className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-500 text-white text-xs font-bold shrink-0">2</div>
                         <p className="text-sm text-gray-300">
-                          <span className="font-medium text-white">Try Voice Chat</span> — Use the voice card to talk directly with the AI assistant
+                          <span className="font-medium text-white">Try Web Voice Chat</span> — Use the voice card to talk directly with the AI assistant through your browser
                         </p>
                       </div>
                       <div className="flex items-start gap-3">
                         <div className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-500 text-white text-xs font-bold shrink-0">3</div>
                         <p className="text-sm text-gray-300">
-                          <span className="font-medium text-white">Book a Call</span> — When you're ready, schedule a time to discuss how this can work for you
+                          <span className="font-medium text-white">Try Phone AI</span> — Call the phone number below to experience the AI voice agent on a real phone call
                         </p>
                       </div>
                     </div>
