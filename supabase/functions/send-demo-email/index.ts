@@ -110,7 +110,7 @@ serve(async (req: Request): Promise<Response> => {
       );
     }
 
-    console.log("Found demo:", { id: demo.id, business_name: demo.business_name, status: demo.status });
+    console.log("Found demo:", { id: demo.id, business_name: demo.business_name, status: demo.status, passcode: demo.passcode });
 
     // Build demo URL - use baseUrl from request, or PUBLIC_DEMO_BASE_URL env var
     let publicBaseUrl = baseUrl;
@@ -129,6 +129,9 @@ serve(async (req: Request): Promise<Response> => {
     
     const demoUrl = `${publicBaseUrl.replace(/\/$/, '')}/demo/${demoId}`;
     console.log("Demo URL:", demoUrl);
+    
+    // Get passcode for phone demo
+    const passcode = demo.passcode || null;
 
     // Build email content
     const senderName = fromName || "EverLaunch";
@@ -188,6 +191,30 @@ serve(async (req: Request): Promise<Response> => {
                   </td>
                 </tr>
               </table>
+              
+              ${passcode ? `
+              <!-- Phone Demo Section -->
+              <div style="background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%); border-radius: 8px; padding: 20px; margin-bottom: 24px; border: 1px solid #bbf7d0;">
+                <table width="100%" cellpadding="0" cellspacing="0">
+                  <tr>
+                    <td>
+                      <h3 style="color: #166534; margin: 0 0 8px 0; font-size: 16px; font-weight: 600;">
+                        📞 Try the Phone Demo
+                      </h3>
+                      <p style="color: #15803d; font-size: 14px; margin: 0 0 12px 0;">
+                        Call <strong>+1 (508) 779-9437</strong> to talk with the AI
+                      </p>
+                      <p style="color: #166534; font-size: 13px; margin: 0;">
+                        Your passcode: <span style="font-size: 24px; font-weight: 700; letter-spacing: 4px; color: #15803d;">${passcode}</span>
+                      </p>
+                      <p style="color: #16a34a; font-size: 12px; margin: 8px 0 0 0;">
+                        Enter this code when prompted to hear your personalized demo
+                      </p>
+                    </td>
+                  </tr>
+                </table>
+              </div>
+              ` : ''}
               
               <p style="color: #52525b; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
                 This real-time simulation shows how AI Chat and AI Voice can work together to turn your website into a lead-capturing powerhouse — instantly engaging your visitors and inbound callers, 24/7.

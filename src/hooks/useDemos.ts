@@ -23,6 +23,7 @@ export interface Demo {
   voice_provider: VoiceProvider;
   elevenlabs_agent_id: string | null;
   vapi_assistant_id: string | null;
+  passcode: string | null;
   status: DemoStatus;
   email_sent_at: string | null;
   first_viewed_at: string | null;
@@ -61,6 +62,30 @@ export interface DemoResult<T> {
 
 export const useDemos = () => {
   /**
+   * Generate a unique 4-digit passcode for phone demos
+   */
+  const generateUniquePasscode = async (): Promise<string> => {
+    const maxAttempts = 10;
+    for (let i = 0; i < maxAttempts; i++) {
+      // Generate random 4-digit code (1000-9999)
+      const passcode = String(Math.floor(Math.random() * 9000) + 1000);
+      
+      // Check if it already exists
+      const { data: existing } = await supabase
+        .from('demos')
+        .select('id')
+        .eq('passcode', passcode)
+        .maybeSingle();
+      
+      if (!existing) {
+        return passcode;
+      }
+    }
+    // Fallback: use timestamp-based code
+    return String(Date.now()).slice(-4);
+  };
+
+  /**
    * Create a new demo row
    */
   const createDemo = async (input: CreateDemoInput): Promise<DemoResult<Demo>> => {
@@ -72,6 +97,9 @@ export const useDemos = () => {
           error: "Demo must be tied to either a lead or a contact"
         };
       }
+
+      // Generate unique passcode for phone demos
+      const passcode = await generateUniquePasscode();
 
       const { data, error } = await supabase
         .from('demos')
@@ -90,6 +118,7 @@ export const useDemos = () => {
           voice_provider: input.voice_provider ?? 'openai',
           elevenlabs_agent_id: input.elevenlabs_agent_id ?? null,
           vapi_assistant_id: input.vapi_assistant_id ?? null,
+          passcode: passcode,
           status: input.status ?? 'draft'
         })
         .select()

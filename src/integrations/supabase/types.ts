@@ -344,6 +344,7 @@ export type Database = {
           id: string
           last_viewed_at: string | null
           lead_id: string | null
+          passcode: string | null
           rep_id: string | null
           screenshot_url: string | null
           status: string
@@ -370,6 +371,7 @@ export type Database = {
           id?: string
           last_viewed_at?: string | null
           lead_id?: string | null
+          passcode?: string | null
           rep_id?: string | null
           screenshot_url?: string | null
           status?: string
@@ -396,6 +398,7 @@ export type Database = {
           id?: string
           last_viewed_at?: string | null
           lead_id?: string | null
+          passcode?: string | null
           rep_id?: string | null
           screenshot_url?: string | null
           status?: string
