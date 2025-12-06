@@ -25,7 +25,7 @@ serve(async (req) => {
     const args = typeof toolArgs === 'string' ? JSON.parse(toolArgs) : toolArgs;
     const businessName = args?.business_name || args?.businessName || '';
 
-    console.log('Looking up demo for business:', businessName);
+    console.log('Raw business name from caller:', businessName);
 
     if (!businessName) {
       return new Response(
@@ -48,12 +48,55 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Search for demo by business name (case-insensitive partial match)
-    const { data: demos, error } = await supabase
+    // Clean business name for better matching
+    const cleanBusinessName = (name: string): string => {
+      return name
+        .toLowerCase()
+        .replace(/[''`]/g, '')  // Remove apostrophes
+        .replace(/\b(pest control|plumbing|services|inc|llc|corp|the|and|co)\b/gi, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+    };
+
+    const cleanedName = cleanBusinessName(businessName);
+    const firstWord = cleanedName.split(' ')[0];
+    
+    console.log('Cleaned business name:', cleanedName);
+    console.log('First word for fallback search:', firstWord);
+
+    // Try multiple search strategies
+    // 1. Try cleaned name match
+    let { data: demos, error } = await supabase
       .from('demos')
       .select('*')
-      .ilike('business_name', `%${businessName}%`)
+      .ilike('business_name', `%${cleanedName}%`)
       .limit(1);
+
+    // 2. If no match, try first word only (catches "Moxie" from "Moxy's Pest Control")
+    if ((!demos || demos.length === 0) && firstWord.length >= 3) {
+      console.log('No match with cleaned name, trying first word:', firstWord);
+      const result = await supabase
+        .from('demos')
+        .select('*')
+        .ilike('business_name', `%${firstWord}%`)
+        .limit(1);
+      demos = result.data;
+      error = result.error;
+    }
+
+    // 3. If still no match, try original name as fallback
+    if (!demos || demos.length === 0) {
+      console.log('No match with first word, trying original:', businessName);
+      const result = await supabase
+        .from('demos')
+        .select('*')
+        .ilike('business_name', `%${businessName}%`)
+        .limit(1);
+      demos = result.data;
+      error = result.error;
+    }
+
+    console.log('Search result - found demos:', demos?.length || 0);
 
     if (error) {
       console.error('Database error:', error);
