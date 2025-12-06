@@ -507,6 +507,7 @@ const PublicDemo = () => {
               aiPersonaName={demo.ai_persona_name || 'Jenna'}
               avatarUrl={demo.avatar_url || undefined}
               phoneNumber="+1 (508) 779-9437"
+              passcode={demo.passcode || undefined}
             />
 
             {/* Calendar Section - AFTER the demo */}

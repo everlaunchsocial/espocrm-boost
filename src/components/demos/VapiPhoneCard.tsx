@@ -7,6 +7,7 @@ interface VapiPhoneCardProps {
   aiPersonaName: string;
   avatarUrl?: string;
   phoneNumber: string;
+  passcode?: string;
   isCallActive?: boolean;
   onCallStart?: () => void;
   onCallEnd?: () => void;
@@ -16,6 +17,7 @@ export const VapiPhoneCard = ({
   aiPersonaName,
   avatarUrl,
   phoneNumber,
+  passcode,
   isCallActive = false,
   onCallStart,
   onCallEnd,
@@ -71,6 +73,18 @@ export const VapiPhoneCard = ({
               {formatPhoneNumber(phoneNumber)}
             </a>
           </div>
+
+          {passcode && (
+            <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg p-4 text-center">
+              <p className="text-xs text-amber-700 dark:text-amber-400 mb-1">Your demo passcode</p>
+              <p className="text-3xl font-bold tracking-widest text-amber-600 dark:text-amber-500">
+                {passcode}
+              </p>
+              <p className="text-xs text-amber-600/80 dark:text-amber-500/80 mt-1">
+                Enter this when prompted
+              </p>
+            </div>
+          )}
 
           <a 
             href={telLink}

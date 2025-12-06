@@ -23,18 +23,20 @@ serve(async (req) => {
 
     // Parse arguments if string
     const args = typeof toolArgs === 'string' ? JSON.parse(toolArgs) : toolArgs;
-    const businessName = args?.business_name || args?.businessName || '';
+    
+    // Get passcode from the tool call (new passcode-based lookup)
+    const passcode = args?.passcode || '';
 
-    console.log('Raw business name from caller:', businessName);
+    console.log('Passcode from caller:', passcode);
 
-    if (!businessName) {
+    if (!passcode) {
       return new Response(
         JSON.stringify({
           results: [{
             toolCallId: toolCall?.id,
             result: JSON.stringify({
               found: false,
-              message: "I didn't catch your business name. Could you please say it again?",
+              message: "I didn't catch your passcode. Could you please say or enter your 4-digit code again?",
               systemPrompt: null
             })
           }]
@@ -48,55 +50,14 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Clean business name for better matching
-    const cleanBusinessName = (name: string): string => {
-      return name
-        .toLowerCase()
-        .replace(/[''`]/g, '')  // Remove apostrophes
-        .replace(/\b(pest control|plumbing|services|inc|llc|corp|the|and|co)\b/gi, '')
-        .replace(/\s+/g, ' ')
-        .trim();
-    };
-
-    const cleanedName = cleanBusinessName(businessName);
-    const firstWord = cleanedName.split(' ')[0];
-    
-    console.log('Cleaned business name:', cleanedName);
-    console.log('First word for fallback search:', firstWord);
-
-    // Try multiple search strategies
-    // 1. Try cleaned name match
-    let { data: demos, error } = await supabase
+    // Simple exact match lookup by passcode - no fuzzy matching needed!
+    const { data: demos, error } = await supabase
       .from('demos')
       .select('*')
-      .ilike('business_name', `%${cleanedName}%`)
+      .eq('passcode', passcode)
       .limit(1);
 
-    // 2. If no match, try first word only (catches "Moxie" from "Moxy's Pest Control")
-    if ((!demos || demos.length === 0) && firstWord.length >= 3) {
-      console.log('No match with cleaned name, trying first word:', firstWord);
-      const result = await supabase
-        .from('demos')
-        .select('*')
-        .ilike('business_name', `%${firstWord}%`)
-        .limit(1);
-      demos = result.data;
-      error = result.error;
-    }
-
-    // 3. If still no match, try original name as fallback
-    if (!demos || demos.length === 0) {
-      console.log('No match with first word, trying original:', businessName);
-      const result = await supabase
-        .from('demos')
-        .select('*')
-        .ilike('business_name', `%${businessName}%`)
-        .limit(1);
-      demos = result.data;
-      error = result.error;
-    }
-
-    console.log('Search result - found demos:', demos?.length || 0);
+    console.log('Passcode lookup result:', demos?.length || 0, 'demos found');
 
     if (error) {
       console.error('Database error:', error);
@@ -104,14 +65,14 @@ serve(async (req) => {
     }
 
     if (!demos || demos.length === 0) {
-      console.log('No demo found for:', businessName);
+      console.log('No demo found for passcode:', passcode);
       return new Response(
         JSON.stringify({
           results: [{
             toolCallId: toolCall?.id,
             result: JSON.stringify({
               found: false,
-              message: `I couldn't find a demo for ${businessName}. Let me show you a general EverLaunch AI demo instead.`,
+              message: `I couldn't find a demo with that passcode. Please double-check your 4-digit code and try again.`,
               systemPrompt: getGenericDemoPrompt()
             })
           }]
