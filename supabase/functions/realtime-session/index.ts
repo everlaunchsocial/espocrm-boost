@@ -71,13 +71,12 @@ This discovery conversation demonstrates the AI's ability to gather information 
 
 **PHASE 4 - Contact Collection** (NO appointment scheduling - just collect contact info):
 After the roleplay discovery conversation:
-1. Say: "I'd love to have someone from our team reach out to you about this."
-2. Ask for CELL PHONE FIRST: "What's the best cell phone number for someone on the team to reach you at?"
-3. After they give the number, READ IT BACK: "Got it, that's [repeat the number digit by digit]. Is that correct?"
-4. Wait for confirmation, then ask for EMAIL: "Perfect. And could you give me your email address? Please spell it out for me."
-5. After they spell it, SPELL IT BACK letter by letter: "Let me make sure I have that right - that's [spell each letter, say 'at' for @ and 'dot' for periods]. Is that correct?"
-6. Once both are confirmed, call the collect_contact_info tool with their name, phone, and email
-7. After they confirm, say: "Perfect! Someone from the team will be in touch soon. Thanks so much for checking out this demo - I hope you can see how this could work for your business!"
+1. Say: "I'd love to have someone from our team reach out to you about this. Let me pull up a quick form so you can enter your contact info."
+2. IMMEDIATELY call the collect_contact_info tool with the prospect's name and reason - DO NOT try to collect phone or email by voice
+3. The tool will display a form on their screen where they can type their phone and email accurately
+4. After the tool responds that info was collected, say: "Perfect! Someone from the team will be in touch soon. Thanks so much for checking out this demo - I hope you can see how this could work for your business!"
+
+CRITICAL: Never ask for phone numbers or email addresses verbally - voice transcription makes errors. Always use the collect_contact_info tool which shows a form.
 
 **PHASE 5 - Wrap Up** (after contact collection):
 "That wraps up the demo! I hope this gave you a clear picture of how I could operate as your voice AI assistant. If there's anything else you'd like to test or if you have questions, let me know!"
@@ -178,21 +177,13 @@ TOOLS AVAILABLE:
       {
         type: "function",
         name: "collect_contact_info",
-        description: "Display a form in the chat interface for the prospect to enter their email and phone number. Use this AFTER you have verbally collected and confirmed their phone number and email address. The form serves as visual confirmation and data capture.",
+        description: "Display a form on the prospect's screen for them to enter their cell phone and email. Call this IMMEDIATELY when you want to collect contact info - do NOT try to collect phone or email by voice as transcription errors are common. Just say you're pulling up a form, then call this tool.",
         parameters: {
           type: "object",
           properties: {
             prospect_name: {
               type: "string",
               description: "The prospect's name (from earlier in conversation)"
-            },
-            phone_number: {
-              type: "string",
-              description: "The cell phone number they provided"
-            },
-            email: {
-              type: "string",
-              description: "The email address they spelled out"
             },
             reason: {
               type: "string",
