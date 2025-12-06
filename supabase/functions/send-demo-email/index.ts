@@ -222,14 +222,16 @@ serve(async (req: Request): Promise<Response> => {
     `;
 
     // Send email via Resend
+    // Use a verified domain email address (same as the working send-email function)
+    const fromAddress = "info@everlaunch.ai";
     console.log("Sending email via Resend...");
-    console.log("From:", `${senderName} <onboarding@resend.dev>`);
+    console.log("From:", `${senderName} <${fromAddress}>`);
     console.log("To:", toEmail);
 
     let emailResponse;
     try {
       emailResponse = await resend.emails.send({
-        from: `${senderName} <onboarding@resend.dev>`,
+        from: `${senderName} <${fromAddress}>`,
         to: [toEmail],
         subject: emailSubject,
         html: emailHtml,
@@ -280,6 +282,57 @@ serve(async (req: Request): Promise<Response> => {
     if (updateError) {
       console.error("Error updating demo:", updateError);
       // Email was sent successfully, so we don't fail the request but log the error
+    }
+
+    // Log activity for the linked lead or contact
+    const entityId = demo.lead_id || demo.contact_id;
+    const entityType = demo.lead_id ? 'lead' : 'contact';
+    
+    if (entityId) {
+      // Get entity name for activity log
+      let entityName = demo.business_name;
+      
+      try {
+        if (demo.lead_id) {
+          const { data: lead } = await supabase
+            .from('leads')
+            .select('first_name, last_name')
+            .eq('id', demo.lead_id)
+            .single();
+          if (lead) {
+            entityName = `${lead.first_name} ${lead.last_name}`;
+          }
+        } else if (demo.contact_id) {
+          const { data: contact } = await supabase
+            .from('contacts')
+            .select('first_name, last_name')
+            .eq('id', demo.contact_id)
+            .single();
+          if (contact) {
+            entityName = `${contact.first_name} ${contact.last_name}`;
+          }
+        }
+      } catch (lookupErr) {
+        console.error("Error looking up entity name:", lookupErr);
+      }
+
+      // Insert activity record
+      const { error: activityError } = await supabase.from('activities').insert({
+        type: 'email',
+        subject: `Demo email sent for ${demo.business_name}`,
+        description: `Demo invitation email sent to ${toEmail}. Demo link: ${demoUrl}`,
+        related_to_id: entityId,
+        related_to_type: entityType,
+        related_to_name: entityName,
+        is_system_generated: true,
+      });
+
+      if (activityError) {
+        console.error("Error logging activity:", activityError);
+        // Don't fail the request, email was sent successfully
+      } else {
+        console.log("Activity logged for demo email send");
+      }
     }
 
     const finalStatus = updatedDemo?.status || demo.status;
