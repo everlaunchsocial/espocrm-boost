@@ -1,7 +1,7 @@
 /**
  * PublicDemo.tsx - Public demo page for prospects
  * 
- * Uses Firecrawl for mobile screenshots and PagePreview component with chat overlay
+ * Modern redesign with colorful hero, improved calendar layout
  */
 
 import { useEffect, useState, useRef } from 'react';
@@ -9,7 +9,8 @@ import { useParams } from 'react-router-dom';
 import { useDemos, Demo } from '@/hooks/useDemos';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ExternalLink, MessageCircle, Phone, PhoneCall, Sparkles, Calendar } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { ExternalLink, MessageCircle, Phone, Sparkles, Calendar, Clock, CheckCircle, Zap, Users } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { RealtimeChat, ContactInfoRequest } from '@/utils/RealtimeAudio';
 import { ElevenLabsChat } from '@/utils/ElevenLabsChat';
@@ -18,6 +19,7 @@ import { CalendarBooking } from '@/components/demos/CalendarBooking';
 import { PagePreview } from '@/components/demos/PagePreview';
 import { VoiceEmployeeCard } from '@/components/demos/VoiceEmployeeCard';
 import { ContactInfoModal } from '@/components/demos/ContactInfoModal';
+
 const PublicDemo = () => {
   const { id } = useParams<{ id: string }>();
   const { getDemoById, incrementViewCount, incrementVoiceInteraction, incrementChatInteraction } = useDemos();
@@ -137,15 +139,12 @@ const PublicDemo = () => {
     }
   };
 
-  // Handle contact info request from AI tool call
-  // Don't show modal immediately - wait for AI to finish speaking
   const handleContactInfoRequest = (request: ContactInfoRequest) => {
     console.log('Contact info requested, waiting for AI to finish speaking...');
     setContactInfoRequest(request);
     pendingContactRequest.current = request;
   };
 
-  // Show modal only after AI finishes speaking about the form
   useEffect(() => {
     if (!isSpeaking && pendingContactRequest.current) {
       console.log('AI finished speaking, showing contact modal now');
@@ -154,13 +153,11 @@ const PublicDemo = () => {
     }
   }, [isSpeaking]);
 
-  // Handle contact info submission
   const handleContactInfoSubmit = (email: string, phone: string) => {
     if (contactInfoRequest && openaiChatRef.current) {
       openaiChatRef.current.submitContactInfo(contactInfoRequest.callId, { email, phone });
       console.log('Contact info submitted:', { email, phone });
       
-      // TODO: Store this in database if needed
       toast({
         title: 'Info Received',
         description: 'Thanks! Someone will be in touch soon.',
@@ -249,7 +246,6 @@ const PublicDemo = () => {
 
       setIsVoiceConnected(true);
 
-      // Track voice interaction only once per session
       if (!voiceInteractionTracked.current && id) {
         voiceInteractionTracked.current = true;
         await incrementVoiceInteraction(id);
@@ -293,22 +289,9 @@ const PublicDemo = () => {
     }
   };
 
-  const voiceProviderLabel = demo?.voice_provider === 'elevenlabs' ? 'ElevenLabs' : 'OpenAI';
-
-  // Vapi config check
-  const vapiPublicKey = import.meta.env.VITE_VAPI_PUBLIC_KEY;
-  const vapiAssistantId = import.meta.env.VITE_VAPI_ASSISTANT_ID;
-  const hasVapiConfig = Boolean(vapiPublicKey && vapiAssistantId);
-
-  const handleVapiCall = () => {
-    if (!hasVapiConfig || !id) return;
-    const vapiWidgetUrl = `https://vapi.ai/call/${vapiAssistantId}`;
-    window.open(vapiWidgetUrl, '_blank');
-  };
-
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-background to-muted flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-primary/10 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
           <p className="text-muted-foreground">Loading your personalized demo...</p>
@@ -319,8 +302,8 @@ const PublicDemo = () => {
 
   if (error || !demo) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-background to-muted flex items-center justify-center p-4">
-        <Card className="max-w-md w-full">
+      <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-primary/10 flex items-center justify-center p-4">
+        <Card className="max-w-md w-full shadow-xl">
           <CardHeader className="text-center">
             <CardTitle className="text-destructive">Demo Not Found</CardTitle>
             <CardDescription>
@@ -338,113 +321,201 @@ const PublicDemo = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/50">
-      {/* Header */}
-      <header className="border-b bg-background/80 backdrop-blur-sm sticky top-0 z-10">
-        <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Sparkles className="h-6 w-6 text-primary" />
-            <span className="font-semibold text-lg">EverLaunch</span>
+    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-primary/10">
+      {/* Hero Header */}
+      <header className="relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-primary via-primary/90 to-primary/80"></div>
+        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4xIj48Y2lyY2xlIGN4PSIzMCIgY3k9IjMwIiByPSIyIi8+PC9nPjwvZz48L3N2Zz4=')] opacity-30"></div>
+        
+        <div className="relative max-w-6xl mx-auto px-4 py-8 md:py-12">
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center gap-2 text-white">
+              <div className="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
+                <Sparkles className="h-6 w-6" />
+              </div>
+              <span className="font-bold text-xl">EverLaunch AI</span>
+            </div>
+            <Badge variant="secondary" className="bg-white/20 text-white border-0 backdrop-blur-sm">
+              Personalized Demo
+            </Badge>
           </div>
-          <span className="text-sm text-muted-foreground">AI Demo Experience</span>
+
+          <div className="text-center text-white space-y-4 max-w-3xl mx-auto">
+            <h1 className="text-3xl md:text-5xl font-bold tracking-tight">
+              Never miss a call or lead again!
+            </h1>
+            <p className="text-lg md:text-xl text-white/90">
+              See how AI can work 24/7 for <span className="font-semibold">{demo.business_name}</span>
+            </p>
+            {demo.website_url && (
+              <a
+                href={demo.website_url.startsWith('http') ? demo.website_url : `https://${demo.website_url}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-white/80 hover:text-white transition-colors text-sm"
+              >
+                <ExternalLink className="h-4 w-4" />
+                {demo.website_url}
+              </a>
+            )}
+          </div>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="max-w-6xl mx-auto px-4 py-8 md:py-12">
-        <div className="grid md:grid-cols-2 gap-8 items-start">
-          {/* Left Column - Info */}
-          <div className="space-y-6">
-            <div>
-              <h1 className="text-3xl md:text-4xl font-bold mb-2">
-                {demo.business_name}
-              </h1>
-              {demo.website_url && (
-                <a
-                  href={demo.website_url.startsWith('http') ? demo.website_url : `https://${demo.website_url}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 text-primary hover:underline"
-                >
-                  <ExternalLink className="h-4 w-4" />
-                  {demo.website_url}
-                </a>
-              )}
-            </div>
+      <main className="max-w-7xl mx-auto px-4 py-8 md:py-12 -mt-4">
+        <div className="grid lg:grid-cols-5 gap-8">
+          
+          {/* Left Column - Demo Info Card (like reference) */}
+          <div className="lg:col-span-2 space-y-6">
+            <Card className="shadow-xl border-0 overflow-hidden">
+              <div className="bg-gradient-to-r from-primary/10 to-primary/5 px-6 py-4 border-b">
+                <div className="flex items-center gap-2">
+                  <div className="p-1.5 bg-primary/20 rounded">
+                    <Sparkles className="h-4 w-4 text-primary" />
+                  </div>
+                  <span className="font-semibold text-primary">EverLaunch AI</span>
+                </div>
+              </div>
+              
+              <CardContent className="p-6 space-y-5">
+                <div>
+                  <h2 className="text-2xl font-bold text-foreground">Personalized Demo</h2>
+                  <div className="flex items-center gap-4 mt-3 text-sm text-muted-foreground">
+                    <span className="flex items-center gap-1.5">
+                      <Clock className="h-4 w-4" />
+                      30 Mins
+                    </span>
+                    <span className="flex items-center gap-1.5">
+                      <Calendar className="h-4 w-4" />
+                      Live Demo
+                    </span>
+                  </div>
+                </div>
 
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-xl">Your Personalized AI Demo</CardTitle>
-                <CardDescription>
-                  This is a custom AI voice and chat demo built specifically for{' '}
-                  <strong>{demo.business_name}</strong>.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <p className="text-muted-foreground">
-                  Imagine having an AI assistant that works on your website 24/7, answering customer
-                  questions, booking appointments, and capturing leads — even when you're busy or
-                  it's after hours.
+                <p className="text-muted-foreground leading-relaxed">
+                  Book a quick demo to see exactly how AI Chat and Voice Agents engage your website 
+                  visitors and callers instantly, answer questions, collect lead info, book appointments, 
+                  and follow up — even after hours.
                 </p>
-                <p className="text-muted-foreground">
-                  <strong>Click the chat bubble</strong> on the phone mockup to start talking to the AI assistant that could work for{' '}
-                  <strong>{demo.business_name}</strong>.
+
+                <p className="text-muted-foreground leading-relaxed">
+                  We'll even help you get more reviews that your AI Agents will respond to automatically.
                 </p>
+
+                <p className="text-muted-foreground leading-relaxed">
+                  Whether you're missing leads now or just want to convert more of them — this is the shortcut.
+                  <span className="font-medium text-foreground"> Let's show you what's possible.</span>
+                </p>
+
+                {/* Feature highlights */}
+                <div className="grid gap-3 pt-2">
+                  <div className="flex items-start gap-3 p-3 rounded-lg bg-primary/5 border border-primary/10">
+                    <div className="p-2 rounded-full bg-primary/10">
+                      <MessageCircle className="h-4 w-4 text-primary" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-sm">AI Chat Widget</p>
+                      <p className="text-xs text-muted-foreground">
+                        Engage visitors instantly with intelligent chat
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3 p-3 rounded-lg bg-primary/5 border border-primary/10">
+                    <div className="p-2 rounded-full bg-primary/10">
+                      <Phone className="h-4 w-4 text-primary" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-sm">AI Voice Agent</p>
+                      <p className="text-xs text-muted-foreground">
+                        Answer calls and handle inquiries 24/7
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3 p-3 rounded-lg bg-primary/5 border border-primary/10">
+                    <div className="p-2 rounded-full bg-primary/10">
+                      <Zap className="h-4 w-4 text-primary" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-sm">Lead Capture</p>
+                      <p className="text-xs text-muted-foreground">
+                        Automatically collect and qualify leads
+                      </p>
+                    </div>
+                  </div>
+                </div>
               </CardContent>
             </Card>
 
-            {/* Features List */}
-            <div className="grid gap-3">
-              <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
-                <div className="rounded-full bg-primary/10 p-2">
-                  <MessageCircle className="h-4 w-4 text-primary" />
-                </div>
-                <div>
-                  <p className="font-medium text-sm">AI Chat Widget</p>
-                  <p className="text-xs text-muted-foreground">
-                    Engage visitors instantly with intelligent chat
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
-                <div className="rounded-full bg-primary/10 p-2">
-                  <Phone className="h-4 w-4 text-primary" />
-                </div>
-                <div>
-                  <p className="font-medium text-sm">AI Voice Agent</p>
-                  <p className="text-xs text-muted-foreground">
-                    Answer calls and handle inquiries 24/7
-                  </p>
-                </div>
-              </div>
+            {/* Voice Employee Card - Below info on mobile/tablet, here on desktop */}
+            <div className="hidden lg:block">
+              <VoiceEmployeeCard
+                aiPersonaName={demo.ai_persona_name || 'Jenna'}
+                avatarUrl={demo.avatar_url || undefined}
+                isConnected={isVoiceConnected}
+                isConnecting={isVoiceConnecting}
+                isSpeaking={isSpeaking}
+                onStartCall={startVoiceDemo}
+                onEndCall={endVoiceDemo}
+              />
             </div>
           </div>
 
-          {/* Right Column - Phone Mockup + Voice Card side by side */}
-          <div className="space-y-6">
-            {/* Phone Mockup and Voice Card Row */}
-            <div className="flex flex-col lg:flex-row gap-4 items-start">
-              {/* Phone Mockup */}
-              <div className="flex-1">
-                {screenshotLoading ? (
-                  <div className="flex items-center justify-center py-16">
-                    <div className="text-center">
-                      <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary mx-auto mb-3"></div>
-                      <p className="text-sm text-muted-foreground">Loading website preview...</p>
-                    </div>
+          {/* Right Column - Calendar & Phone Preview */}
+          <div className="lg:col-span-3 space-y-6">
+            {/* Calendar Section - Prominent like reference */}
+            <Card className="shadow-xl border-0">
+              <CardHeader className="border-b bg-muted/30">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="text-xl flex items-center gap-2">
+                      <Calendar className="h-5 w-5 text-primary" />
+                      Select Date & Time
+                    </CardTitle>
+                    <CardDescription>
+                      Pick a time that works best for your personalized demo
+                    </CardDescription>
                   </div>
-                ) : mobileScreenshot ? (
-                  <PagePreview
-                    screenshot={mobileScreenshot}
-                    demoId={id!}
-                    businessName={demo.business_name}
-                    aiPersonaName={demo.ai_persona_name || undefined}
-                    onChatInteraction={handleChatInteraction}
-                  />
-                ) : (
-                  <Card className="overflow-hidden">
-                    <CardContent className="py-16 text-center">
-                      <Sparkles className="h-12 w-12 text-primary mx-auto mb-4" />
+                </div>
+              </CardHeader>
+              <CardContent className="p-6">
+                <CalendarBooking demoId={id!} businessName={demo.business_name} />
+              </CardContent>
+            </Card>
+
+            {/* Phone Preview Section */}
+            <Card className="shadow-xl border-0">
+              <CardHeader className="border-b bg-muted/30">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <MessageCircle className="h-5 w-5 text-primary" />
+                  Try the AI Chat Demo
+                </CardTitle>
+                <CardDescription>
+                  Click the chat bubble to start talking to the AI
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="p-6">
+                <div className="flex flex-col items-center">
+                  {screenshotLoading ? (
+                    <div className="flex items-center justify-center py-16">
+                      <div className="text-center">
+                        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary mx-auto mb-3"></div>
+                        <p className="text-sm text-muted-foreground">Loading website preview...</p>
+                      </div>
+                    </div>
+                  ) : mobileScreenshot ? (
+                    <PagePreview
+                      screenshot={mobileScreenshot}
+                      demoId={id!}
+                      businessName={demo.business_name}
+                      aiPersonaName={demo.ai_persona_name || undefined}
+                      onChatInteraction={handleChatInteraction}
+                    />
+                  ) : (
+                    <div className="w-full py-12 text-center">
+                      <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-4">
+                        <Sparkles className="h-8 w-8 text-primary" />
+                      </div>
                       <p className="text-muted-foreground mb-2">
                         Website preview not available
                       </p>
@@ -459,55 +530,46 @@ const PublicDemo = () => {
                           Visit website
                         </a>
                       )}
-                    </CardContent>
-                  </Card>
-                )}
-              </div>
-
-              {/* Voice Employee Card */}
-              <div className="w-full lg:w-72 flex-shrink-0">
-                <VoiceEmployeeCard
-                  aiPersonaName={demo.ai_persona_name || 'Jenna'}
-                  avatarUrl={demo.avatar_url || undefined}
-                  isConnected={isVoiceConnected}
-                  isConnecting={isVoiceConnecting}
-                  isSpeaking={isSpeaking}
-                  onStartCall={startVoiceDemo}
-                  onEndCall={endVoiceDemo}
-                />
-              </div>
-            </div>
-
-            {/* Book a Call Section */}
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <Calendar className="h-5 w-5 text-primary" />
-                  Book a Call
-                </CardTitle>
-                <CardDescription>
-                  Ready to learn more? Schedule a call with us.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <CalendarBooking demoId={id!} businessName={demo.business_name} />
+                    </div>
+                  )}
+                </div>
               </CardContent>
             </Card>
+
+            {/* Voice Card - Visible on mobile/tablet only */}
+            <div className="lg:hidden">
+              <VoiceEmployeeCard
+                aiPersonaName={demo.ai_persona_name || 'Jenna'}
+                avatarUrl={demo.avatar_url || undefined}
+                isConnected={isVoiceConnected}
+                isConnecting={isVoiceConnecting}
+                isSpeaking={isSpeaking}
+                onStartCall={startVoiceDemo}
+                onEndCall={endVoiceDemo}
+              />
+            </div>
           </div>
         </div>
       </main>
 
       {/* Footer */}
-      <footer className="border-t bg-background/80 mt-12">
-        <div className="max-w-6xl mx-auto px-4 py-6 text-center">
-          <div className="flex items-center justify-center gap-2 text-muted-foreground">
-            <Sparkles className="h-4 w-4" />
-            <span className="text-sm">Powered by EverLaunch</span>
+      <footer className="border-t bg-background/80 backdrop-blur-sm mt-12">
+        <div className="max-w-6xl mx-auto px-4 py-8">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <div className="p-1.5 bg-primary/10 rounded">
+                <Sparkles className="h-4 w-4 text-primary" />
+              </div>
+              <span className="text-sm font-medium">Powered by EverLaunch AI</span>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              AI that works while you sleep
+            </p>
           </div>
         </div>
       </footer>
 
-      {/* Contact Info Modal - triggered by AI tool call */}
+      {/* Contact Info Modal */}
       <ContactInfoModal
         isOpen={showContactModal}
         onClose={() => {
