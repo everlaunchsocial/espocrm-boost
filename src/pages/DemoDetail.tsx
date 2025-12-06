@@ -341,12 +341,22 @@ export default function DemoDetail() {
                     src={demo.screenshot_url}
                     alt={`Homepage preview for ${demo.business_name}`}
                     className="rounded-lg border border-border shadow-sm hover:shadow-md transition-shadow cursor-pointer max-w-full h-auto"
+                    onError={(e) => {
+                      // Hide broken image and show fallback
+                      e.currentTarget.style.display = 'none';
+                      const fallback = e.currentTarget.parentElement?.querySelector('.screenshot-fallback');
+                      if (fallback) fallback.classList.remove('hidden');
+                    }}
                   />
+                  <div className="screenshot-fallback hidden flex items-center gap-2 text-muted-foreground p-4 border border-dashed border-border rounded-lg">
+                    <Image className="h-4 w-4" />
+                    <span className="text-sm">Screenshot failed to load.</span>
+                  </div>
                 </a>
               ) : (
-                <div className="flex items-center gap-2 text-muted-foreground">
+                <div className="flex items-center gap-2 text-muted-foreground p-4 border border-dashed border-border rounded-lg">
                   <Image className="h-4 w-4" />
-                  <span className="text-sm">Screenshot not available for this demo.</span>
+                  <span className="text-sm">Screenshot not available yet for this demo.</span>
                 </div>
               )}
             </div>

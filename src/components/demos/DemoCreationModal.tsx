@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Dialog,
@@ -43,16 +43,21 @@ export function DemoCreationModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Reset form when modal opens with new defaults
-  const handleOpenChange = (isOpen: boolean) => {
-    if (!isOpen) {
-      onClose();
-    } else {
+  // Reset form when modal opens OR when entity changes (leadId/contactId/defaults change)
+  useEffect(() => {
+    if (open) {
+      // Always reset form state when modal opens or entity changes
       setBusinessName(defaultBusinessName);
       setWebsiteUrl(defaultWebsiteUrl);
       setAiPersonaName('');
       setChatTitle('');
       setError(null);
+    }
+  }, [open, leadId, contactId, defaultBusinessName, defaultWebsiteUrl]);
+
+  const handleOpenChange = (isOpen: boolean) => {
+    if (!isOpen) {
+      onClose();
     }
   };
 
