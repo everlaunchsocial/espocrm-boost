@@ -99,7 +99,20 @@ export const useDemos = () => {
       }
 
       // Generate unique passcode for phone demos
-      const passcode = await generateUniquePasscode();
+      let passcode: string;
+      try {
+        passcode = await generateUniquePasscode();
+        console.log('Generated passcode for new demo:', passcode);
+      } catch (passcodeError) {
+        console.error('Error generating passcode, using fallback:', passcodeError);
+        passcode = String(Date.now()).slice(-4);
+      }
+
+      // Ensure passcode is valid
+      if (!passcode || passcode.length !== 4) {
+        console.warn('Invalid passcode generated, using fallback:', passcode);
+        passcode = String(Date.now()).slice(-4);
+      }
 
       const { data, error } = await supabase
         .from('demos')
