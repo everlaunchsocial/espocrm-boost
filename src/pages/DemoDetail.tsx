@@ -6,10 +6,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { ArrowLeft, Send, Copy, ExternalLink, Eye, MessageSquare, Phone, Loader2, CheckCircle, Image } from 'lucide-react';
+import { ArrowLeft, Send, Copy, ExternalLink, Eye, MessageSquare, Phone, Loader2, CheckCircle, Image as ImageIcon } from 'lucide-react';
 import { useDemos, Demo, DemoStatus } from '@/hooks/useDemos';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { EmailPreview } from '@/components/demos/EmailPreview';
 
 const statusColors: Record<DemoStatus, string> = {
   draft: 'bg-muted text-muted-foreground',
@@ -251,7 +252,7 @@ export default function DemoDetail() {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        {/* Demo Info */}
+        {/* Left Column - Demo Info */}
         <Card>
           <CardHeader>
             <CardTitle>Demo Information</CardTitle>
@@ -349,13 +350,13 @@ export default function DemoDetail() {
                     }}
                   />
                   <div className="screenshot-fallback hidden flex items-center gap-2 text-muted-foreground p-4 border border-dashed border-border rounded-lg">
-                    <Image className="h-4 w-4" />
+                    <ImageIcon className="h-4 w-4" />
                     <span className="text-sm">Screenshot failed to load.</span>
                   </div>
                 </a>
               ) : (
                 <div className="flex items-center gap-2 text-muted-foreground p-4 border border-dashed border-border rounded-lg">
-                  <Image className="h-4 w-4" />
+                  <ImageIcon className="h-4 w-4" />
                   <span className="text-sm">Screenshot not available yet for this demo.</span>
                 </div>
               )}
@@ -468,6 +469,14 @@ export default function DemoDetail() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Email Preview - Full Width Below */}
+      <EmailPreview
+        recipientName={toName || 'there'}
+        businessName={demo.business_name}
+        demoUrl={demoUrl}
+        senderName={fromName}
+      />
     </div>
   );
 }
