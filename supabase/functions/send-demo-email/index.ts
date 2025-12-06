@@ -137,6 +137,10 @@ serve(async (req: Request): Promise<Response> => {
 
     const emailSubject = `Your personalized AI receptionist demo is ready`;
 
+    // Generate tracking ID and pixel URL (same pattern as send-email)
+    const trackingId = crypto.randomUUID();
+    const trackingPixelUrl = `${supabaseUrl}/functions/v1/track-email-open?id=${trackingId}`;
+
     const emailHtml = `
 <!DOCTYPE html>
 <html>
@@ -217,6 +221,8 @@ serve(async (req: Request): Promise<Response> => {
       </td>
     </tr>
   </table>
+  <!-- Tracking pixel for open tracking -->
+  <img src="${trackingPixelUrl}" width="1" height="1" style="display:none;" alt="" />
 </body>
 </html>
     `;
@@ -227,6 +233,7 @@ serve(async (req: Request): Promise<Response> => {
     console.log("Sending email via Resend...");
     console.log("From:", `${senderName} <${fromAddress}>`);
     console.log("To:", toEmail);
+    console.log("Tracking ID:", trackingId);
 
     let emailResponse;
     try {
@@ -260,6 +267,26 @@ serve(async (req: Request): Promise<Response> => {
         }),
         { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
+    }
+
+    // Store email in emails table for open tracking (same as regular send-email)
+    const { data: emailRecord, error: emailDbError } = await supabase.from("emails").insert({
+      contact_id: demo.lead_id || demo.contact_id || demoId, // Use entity ID or demo ID as fallback
+      sender_address: fromAddress,
+      sender_name: senderName,
+      to_email: toEmail,
+      to_name: toName,
+      subject: emailSubject,
+      body: emailHtml,
+      status: "sent",
+      tracking_id: trackingId,
+    }).select().single();
+
+    if (emailDbError) {
+      console.error("Error storing email record:", emailDbError);
+      // Don't fail - email was sent, just tracking won't work
+    } else {
+      console.log("Email record stored with tracking ID:", trackingId);
     }
 
     // Update demo record

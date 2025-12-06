@@ -104,6 +104,59 @@ export type Database = {
         }
         Relationships: []
       }
+      calendar_bookings: {
+        Row: {
+          booking_date: string
+          booking_time: string
+          created_at: string
+          demo_id: string | null
+          id: string
+          notes: string | null
+          prospect_email: string
+          prospect_name: string
+          prospect_phone: string | null
+          status: string
+          timezone: string | null
+          updated_at: string
+        }
+        Insert: {
+          booking_date: string
+          booking_time: string
+          created_at?: string
+          demo_id?: string | null
+          id?: string
+          notes?: string | null
+          prospect_email: string
+          prospect_name: string
+          prospect_phone?: string | null
+          status?: string
+          timezone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          booking_date?: string
+          booking_time?: string
+          created_at?: string
+          demo_id?: string | null
+          id?: string
+          notes?: string | null
+          prospect_email?: string
+          prospect_name?: string
+          prospect_phone?: string | null
+          status?: string
+          timezone?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "calendar_bookings_demo_id_fkey"
+            columns: ["demo_id"]
+            isOneToOne: false
+            referencedRelation: "demos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       call_logs: {
         Row: {
           action_items: Json | null

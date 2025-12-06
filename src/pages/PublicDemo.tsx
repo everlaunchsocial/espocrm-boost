@@ -21,6 +21,7 @@ import { useToast } from '@/hooks/use-toast';
 import { RealtimeChat } from '@/utils/RealtimeAudio';
 import { ElevenLabsChat } from '@/utils/ElevenLabsChat';
 import { supabase } from '@/integrations/supabase/client';
+import { CalendarBooking } from '@/components/demos/CalendarBooking';
 
 // Chat message type
 interface ChatMessage {
@@ -879,22 +880,10 @@ const PublicDemo = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                {import.meta.env.VITE_DEFAULT_BOOKING_URL ? (
-                  <Button 
-                    className="w-full" 
-                    onClick={() => {
-                      // TODO: Add incrementBookingClick(id) tracking here when implemented
-                      window.open(import.meta.env.VITE_DEFAULT_BOOKING_URL, '_blank');
-                    }}
-                  >
-                    <Calendar className="mr-2 h-4 w-4" />
-                    Book a Call With Us
-                  </Button>
-                ) : (
-                  <p className="text-sm text-muted-foreground text-center py-2">
-                    Online scheduling will be added soon. For now, please reply to the email or contact us directly.
-                  </p>
-                )}
+                <CalendarBooking 
+                  demoId={id || ''} 
+                  businessName={demo.business_name}
+                />
               </CardContent>
             </Card>
 
