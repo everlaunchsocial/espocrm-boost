@@ -114,6 +114,14 @@
     @apply bg-card/80 backdrop-blur-sm;
   }
 
+  .shadow-glow {
+    box-shadow: 0 0 40px hsl(217 91% 60% / 0.3);
+  }
+
+  .shadow-soft {
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+  }
+
   .animate-fade-in {
     animation: fadeIn 0.3s ease-out;
   }

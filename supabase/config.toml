@@ -44,3 +44,6 @@ verify_jwt = false
 
 [functions.create-booking]
 verify_jwt = false
+
+[functions.scrape-mobile]
+verify_jwt = false
