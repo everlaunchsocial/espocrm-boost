@@ -135,7 +135,7 @@ serve(async (req: Request): Promise<Response> => {
     const recipientName = toName || "there";
     const businessName = demo.business_name;
 
-    const emailSubject = `Your personalized AI receptionist demo is ready`;
+    const emailSubject = `Your Personalized AI Receptionist Demo is Ready!`;
 
     // Generate tracking ID and pixel URL (same pattern as send-email)
     const trackingId = crypto.randomUUID();
@@ -158,7 +158,7 @@ serve(async (req: Request): Promise<Response> => {
           <tr>
             <td style="background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); padding: 32px; text-align: center;">
               <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: 600;">
-                ✨ EverLaunch
+                ✨ EverLaunch AI
               </h1>
               <p style="color: rgba(255,255,255,0.9); margin: 8px 0 0 0; font-size: 14px;">
                 AI-Powered Customer Engagement
@@ -174,34 +174,48 @@ serve(async (req: Request): Promise<Response> => {
               </h2>
               
               <p style="color: #52525b; font-size: 16px; line-height: 1.6; margin: 0 0 24px 0;">
-                We've built a personalized AI demo specifically for <strong>${businessName}</strong>. 
-                This demo shows exactly how an AI voice and chat assistant could work on your website — 
-                answering customer questions, capturing leads, and booking appointments 24/7.
-              </p>
-              
-              <p style="color: #52525b; font-size: 16px; line-height: 1.6; margin: 0 0 32px 0;">
-                Click below to experience your custom AI assistant:
+                As promised, here's your personalized AI demo for <strong>${businessName}</strong>:
               </p>
               
               <!-- CTA Button -->
-              <table width="100%" cellpadding="0" cellspacing="0">
+              <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 24px;">
                 <tr>
                   <td align="center">
                     <a href="${demoUrl}" 
                        style="display: inline-block; background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); color: #ffffff; text-decoration: none; padding: 16px 32px; border-radius: 8px; font-size: 16px; font-weight: 600; box-shadow: 0 4px 14px rgba(99, 102, 241, 0.4);">
-                      View Your AI Demo →
+                      👉 View Your Personalized AI Demo
                     </a>
                   </td>
                 </tr>
               </table>
               
-              <p style="color: #71717a; font-size: 14px; line-height: 1.6; margin: 32px 0 0 0;">
-                In your demo, you can:
+              <p style="color: #52525b; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+                This real-time simulation shows how AI Chat and AI Voice can work together to turn your website into a lead-capturing powerhouse — instantly engaging your visitors and inbound callers, 24/7.
               </p>
-              <ul style="color: #52525b; font-size: 14px; line-height: 1.8; margin: 8px 0 0 0; padding-left: 20px;">
-                <li>Talk to an AI voice assistant trained on your business</li>
-                <li>See how it would handle customer inquiries</li>
-                <li>Experience 24/7 lead capture in action</li>
+              
+              <p style="color: #52525b; font-size: 16px; line-height: 1.8; margin: 0 0 20px 0;">
+                ✅ It's smart.<br>
+                ✅ It's conversational.<br>
+                ✅ It works around the clock — like an extra team member that never sleeps.
+              </p>
+              
+              <p style="color: #52525b; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+                Here's the reality: prospects have short attention spans and want answers fast. If they don't get them, they leave — or worse, go to your competitors.
+              </p>
+              
+              <p style="color: #52525b; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+                Our AI assistants respond immediately with no delay, keeping leads engaged while collecting their contact info, interests, and even qualifying details so your team can follow up — or let the AI handle it.
+              </p>
+              
+              <p style="color: #52525b; font-size: 16px; line-height: 1.6; margin: 0 0 12px 0;">
+                Once you're a customer, we custom-build your AI assistants using the full knowledge base of your business so they can:
+              </p>
+              
+              <ul style="color: #52525b; font-size: 15px; line-height: 1.8; margin: 0 0 24px 0; padding-left: 24px;">
+                <li>Answer specific questions about your services</li>
+                <li>Book appointments or consultations</li>
+                <li>Transfer live calls to your team</li>
+                <li>And keep your pipeline full — even after hours</li>
               </ul>
             </td>
           </tr>
@@ -213,7 +227,7 @@ serve(async (req: Request): Promise<Response> => {
                 Questions? Reply to this email or contact us anytime.
               </p>
               <p style="color: #a1a1aa; font-size: 12px; margin: 12px 0 0 0; text-align: center;">
-                Powered by EverLaunch • AI that works while you sleep
+                Powered by EverLaunch AI • AI that works while you sleep
               </p>
             </td>
           </tr>
