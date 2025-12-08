@@ -1391,6 +1391,7 @@ export type Database = {
           affiliate_id: string
           amount: number
           id: string
+          method: string | null
           paid_at: string
           period_end: string
           period_start: string
@@ -1399,6 +1400,7 @@ export type Database = {
           affiliate_id: string
           amount?: number
           id?: string
+          method?: string | null
           paid_at?: string
           period_end: string
           period_start: string
@@ -1407,6 +1409,7 @@ export type Database = {
           affiliate_id?: string
           amount?: number
           id?: string
+          method?: string | null
           paid_at?: string
           period_end?: string
           period_start?: string
@@ -1625,6 +1628,13 @@ export type Database = {
           p_gross_amount: number
         }
         Returns: undefined
+      }
+      generate_payouts_for_period: {
+        Args: { p_period_end: string; p_period_start: string }
+        Returns: {
+          affiliates_paid: number
+          total_amount: number
+        }[]
       }
       is_admin: { Args: never; Returns: boolean }
       populate_genealogy_for_affiliate: {
