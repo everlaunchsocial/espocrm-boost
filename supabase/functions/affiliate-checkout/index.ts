@@ -11,6 +11,7 @@ interface CheckoutRequest {
   user_id: string;
   email: string;
   username: string;
+  sponsor_affiliate_id?: string | null;
 }
 
 serve(async (req: Request): Promise<Response> => {
@@ -43,9 +44,9 @@ serve(async (req: Request): Promise<Response> => {
     }
 
     const supabase = createClient(supabaseUrl, supabaseKey);
-    const { plan_code, user_id, email, username }: CheckoutRequest = await req.json();
+    const { plan_code, user_id, email, username, sponsor_affiliate_id }: CheckoutRequest = await req.json();
 
-    console.log("Checkout request:", { plan_code, user_id, email, username });
+    console.log("Checkout request:", { plan_code, user_id, email, username, sponsor_affiliate_id });
 
     // Validate plan exists and is paid
     const { data: plan, error: planError } = await supabase
@@ -110,6 +111,7 @@ serve(async (req: Request): Promise<Response> => {
         plan_code,
         username,
         affiliate_plan_id: plan.id,
+        sponsor_affiliate_id: sponsor_affiliate_id || "",
       },
     });
 

@@ -1030,7 +1030,7 @@ export type Database = {
           {
             foreignKeyName: "genealogy_affiliate_id_fkey"
             columns: ["affiliate_id"]
-            isOneToOne: false
+            isOneToOne: true
             referencedRelation: "affiliates"
             referencedColumns: ["id"]
           },
@@ -1627,6 +1627,10 @@ export type Database = {
         Returns: undefined
       }
       is_admin: { Args: never; Returns: boolean }
+      populate_genealogy_for_affiliate: {
+        Args: { p_affiliate_id: string }
+        Returns: undefined
+      }
       test_distribute_commissions: {
         Args: { p_customer_id: string; p_gross_amount: number }
         Returns: {
