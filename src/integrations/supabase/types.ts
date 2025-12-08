@@ -104,6 +104,166 @@ export type Database = {
         }
         Relationships: []
       }
+      affiliate_commissions: {
+        Row: {
+          affiliate_id: string
+          amount: number
+          commission_level: number
+          created_at: string
+          customer_id: string
+          id: string
+          paid_at: string | null
+          status: string
+        }
+        Insert: {
+          affiliate_id: string
+          amount?: number
+          commission_level: number
+          created_at?: string
+          customer_id: string
+          id?: string
+          paid_at?: string | null
+          status?: string
+        }
+        Update: {
+          affiliate_id?: string
+          amount?: number
+          commission_level?: number
+          created_at?: string
+          customer_id?: string
+          id?: string
+          paid_at?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "affiliate_commissions_affiliate_id_fkey"
+            columns: ["affiliate_id"]
+            isOneToOne: false
+            referencedRelation: "affiliates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "affiliate_commissions_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customer_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      affiliates: {
+        Row: {
+          commission_plan_id: string | null
+          created_at: string
+          id: string
+          parent_affiliate_id: string | null
+          user_id: string
+          username: string
+        }
+        Insert: {
+          commission_plan_id?: string | null
+          created_at?: string
+          id?: string
+          parent_affiliate_id?: string | null
+          user_id: string
+          username: string
+        }
+        Update: {
+          commission_plan_id?: string | null
+          created_at?: string
+          id?: string
+          parent_affiliate_id?: string | null
+          user_id?: string
+          username?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "affiliates_commission_plan_id_fkey"
+            columns: ["commission_plan_id"]
+            isOneToOne: false
+            referencedRelation: "commission_plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "affiliates_parent_affiliate_id_fkey"
+            columns: ["parent_affiliate_id"]
+            isOneToOne: false
+            referencedRelation: "affiliates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      billing_subscriptions: {
+        Row: {
+          created_at: string
+          customer_id: string
+          id: string
+          plan_id: string | null
+          status: string
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          customer_id: string
+          id?: string
+          plan_id?: string | null
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          customer_id?: string
+          id?: string
+          plan_id?: string | null
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "billing_subscriptions_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customer_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      billing_usage: {
+        Row: {
+          amount: number
+          customer_id: string
+          id: string
+          timestamp: string
+          usage_type: string
+        }
+        Insert: {
+          amount?: number
+          customer_id: string
+          id?: string
+          timestamp?: string
+          usage_type: string
+        }
+        Update: {
+          amount?: number
+          customer_id?: string
+          id?: string
+          timestamp?: string
+          usage_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "billing_usage_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customer_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       calendar_bookings: {
         Row: {
           booking_date: string
@@ -214,6 +374,68 @@ export type Database = {
           },
         ]
       }
+      chat_settings: {
+        Row: {
+          customer_id: string
+          id: string
+          instructions: string | null
+          tone: string | null
+          updated_at: string
+        }
+        Insert: {
+          customer_id: string
+          id?: string
+          instructions?: string | null
+          tone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          customer_id?: string
+          id?: string
+          instructions?: string | null
+          tone?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_settings_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: true
+            referencedRelation: "customer_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      commission_plans: {
+        Row: {
+          created_at: string
+          id: string
+          is_default: boolean
+          level1_rate: number
+          level2_rate: number
+          level3_rate: number
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          level1_rate?: number
+          level2_rate?: number
+          level3_rate?: number
+          name: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          level1_rate?: number
+          level2_rate?: number
+          level3_rate?: number
+          name?: string
+        }
+        Relationships: []
+      }
       contacts: {
         Row: {
           account_id: string | null
@@ -269,6 +491,47 @@ export type Database = {
             columns: ["account_id"]
             isOneToOne: false
             referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      customer_profiles: {
+        Row: {
+          affiliate_id: string | null
+          created_at: string
+          id: string
+          minutes_included: number
+          minutes_used: number
+          overage_rate: number
+          plan_name: string | null
+          user_id: string
+        }
+        Insert: {
+          affiliate_id?: string | null
+          created_at?: string
+          id?: string
+          minutes_included?: number
+          minutes_used?: number
+          overage_rate?: number
+          plan_name?: string | null
+          user_id: string
+        }
+        Update: {
+          affiliate_id?: string | null
+          created_at?: string
+          id?: string
+          minutes_included?: number
+          minutes_used?: number
+          overage_rate?: number
+          plan_name?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_profiles_affiliate_id_fkey"
+            columns: ["affiliate_id"]
+            isOneToOne: false
+            referencedRelation: "affiliates"
             referencedColumns: ["id"]
           },
         ]
@@ -337,6 +600,7 @@ export type Database = {
           chat_primary_color: string | null
           chat_title: string | null
           contact_id: string | null
+          converted_at: string | null
           created_at: string
           elevenlabs_agent_id: string | null
           email_sent_at: string | null
@@ -364,6 +628,7 @@ export type Database = {
           chat_primary_color?: string | null
           chat_title?: string | null
           contact_id?: string | null
+          converted_at?: string | null
           created_at?: string
           elevenlabs_agent_id?: string | null
           email_sent_at?: string | null
@@ -391,6 +656,7 @@ export type Database = {
           chat_primary_color?: string | null
           chat_title?: string | null
           contact_id?: string | null
+          converted_at?: string | null
           created_at?: string
           elevenlabs_agent_id?: string | null
           email_sent_at?: string | null
@@ -649,6 +915,62 @@ export type Database = {
             columns: ["lead_id"]
             isOneToOne: false
             referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      genealogy: {
+        Row: {
+          affiliate_id: string
+          created_at: string
+          id: string
+          upline_level1: string | null
+          upline_level2: string | null
+          upline_level3: string | null
+        }
+        Insert: {
+          affiliate_id: string
+          created_at?: string
+          id?: string
+          upline_level1?: string | null
+          upline_level2?: string | null
+          upline_level3?: string | null
+        }
+        Update: {
+          affiliate_id?: string
+          created_at?: string
+          id?: string
+          upline_level1?: string | null
+          upline_level2?: string | null
+          upline_level3?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "genealogy_affiliate_id_fkey"
+            columns: ["affiliate_id"]
+            isOneToOne: false
+            referencedRelation: "affiliates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "genealogy_upline_level1_fkey"
+            columns: ["upline_level1"]
+            isOneToOne: false
+            referencedRelation: "affiliates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "genealogy_upline_level2_fkey"
+            columns: ["upline_level2"]
+            isOneToOne: false
+            referencedRelation: "affiliates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "genealogy_upline_level3_fkey"
+            columns: ["upline_level3"]
+            isOneToOne: false
+            referencedRelation: "affiliates"
             referencedColumns: ["id"]
           },
         ]
@@ -971,6 +1293,41 @@ export type Database = {
         }
         Relationships: []
       }
+      payouts: {
+        Row: {
+          affiliate_id: string
+          amount: number
+          id: string
+          paid_at: string
+          period_end: string
+          period_start: string
+        }
+        Insert: {
+          affiliate_id: string
+          amount?: number
+          id?: string
+          paid_at?: string
+          period_end: string
+          period_start: string
+        }
+        Update: {
+          affiliate_id?: string
+          amount?: number
+          id?: string
+          paid_at?: string
+          period_end?: string
+          period_start?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payouts_affiliate_id_fkey"
+            columns: ["affiliate_id"]
+            isOneToOne: false
+            referencedRelation: "affiliates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sender_addresses: {
         Row: {
           created_at: string
@@ -1039,6 +1396,105 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      twilio_numbers: {
+        Row: {
+          created_at: string
+          customer_id: string
+          id: string
+          status: string
+          twilio_number: string
+        }
+        Insert: {
+          created_at?: string
+          customer_id: string
+          id?: string
+          status?: string
+          twilio_number: string
+        }
+        Update: {
+          created_at?: string
+          customer_id?: string
+          id?: string
+          status?: string
+          twilio_number?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "twilio_numbers_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customer_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      usage_logs: {
+        Row: {
+          created_at: string
+          customer_id: string
+          id: string
+          interaction_type: string
+          metadata: Json | null
+        }
+        Insert: {
+          created_at?: string
+          customer_id: string
+          id?: string
+          interaction_type: string
+          metadata?: Json | null
+        }
+        Update: {
+          created_at?: string
+          customer_id?: string
+          id?: string
+          interaction_type?: string
+          metadata?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "usage_logs_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customer_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      voice_settings: {
+        Row: {
+          customer_id: string
+          id: string
+          updated_at: string
+          voice_gender: string | null
+          voice_pitch: number | null
+          voice_speed: number | null
+        }
+        Insert: {
+          customer_id: string
+          id?: string
+          updated_at?: string
+          voice_gender?: string | null
+          voice_pitch?: number | null
+          voice_speed?: number | null
+        }
+        Update: {
+          customer_id?: string
+          id?: string
+          updated_at?: string
+          voice_gender?: string | null
+          voice_pitch?: number | null
+          voice_speed?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "voice_settings_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: true
+            referencedRelation: "customer_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
