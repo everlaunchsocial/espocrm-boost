@@ -92,7 +92,8 @@ export function useCustomerOnboarding() {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        navigate('/affiliate-signup');
+        // No user - they need to buy/signup first
+        navigate('/buy');
         return;
       }
 
