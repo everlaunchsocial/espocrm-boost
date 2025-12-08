@@ -1146,6 +1146,7 @@ export type Database = {
       leads: {
         Row: {
           address: string | null
+          affiliate_id: string | null
           city: string | null
           company: string | null
           created_at: string
@@ -1173,6 +1174,7 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          affiliate_id?: string | null
           city?: string | null
           company?: string | null
           created_at?: string
@@ -1200,6 +1202,7 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          affiliate_id?: string | null
           city?: string | null
           company?: string | null
           created_at?: string
@@ -1225,7 +1228,15 @@ export type Database = {
           website?: string | null
           zip_code?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "leads_affiliate_id_fkey"
+            columns: ["affiliate_id"]
+            isOneToOne: false
+            referencedRelation: "affiliates"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       media_library: {
         Row: {

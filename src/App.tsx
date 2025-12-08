@@ -28,6 +28,7 @@ import Checkout from "./pages/Checkout";
 import BusinessOpportunity from "./pages/BusinessOpportunity";
 import NotFound from "./pages/NotFound";
 import Unauthorized from "./pages/Unauthorized";
+import AffiliatePublicPage from "./pages/AffiliatePublicPage";
 
 // Affiliate pages
 import AffiliateDashboard from "./pages/affiliate/AffiliateDashboard";
@@ -51,6 +52,9 @@ const App = () => (
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/biz" element={<BusinessOpportunity />} />
           <Route path="/unauthorized" element={<Unauthorized />} />
+          
+          {/* Affiliate replicated URL - public facing */}
+          <Route path="/rep/:username" element={<AffiliatePublicPage />} />
           
           {/* Affiliate routes - inside AffiliateLayout */}
           <Route element={<AffiliateLayout />}>
