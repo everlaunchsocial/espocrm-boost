@@ -68,10 +68,11 @@ serve(async (req: Request): Promise<Response> => {
     const planCode = session.metadata?.plan_code;
     const username = session.metadata?.username;
     const affiliatePlanId = session.metadata?.affiliate_plan_id;
+    const sponsorAffiliateId = session.metadata?.sponsor_affiliate_id || null;
     const customerId = session.customer as string;
     const subscriptionId = (session.subscription as any)?.id || session.subscription;
 
-    console.log("Session verified:", { userId, planCode, username, affiliatePlanId });
+    console.log("Session verified:", { userId, planCode, username, affiliatePlanId, sponsorAffiliateId });
 
     if (!userId || !planCode || !affiliatePlanId) {
       return new Response(
@@ -117,6 +118,7 @@ serve(async (req: Request): Promise<Response> => {
           affiliate_plan_id: affiliatePlanId,
           demo_credits_balance: creditsBalance,
           demo_credits_reset_at: resetAt,
+          parent_affiliate_id: sponsorAffiliateId || null,
         })
         .eq("id", existingAffiliate.id);
 
@@ -133,6 +135,7 @@ serve(async (req: Request): Promise<Response> => {
           affiliate_plan_id: affiliatePlanId,
           demo_credits_balance: creditsBalance,
           demo_credits_reset_at: resetAt,
+          parent_affiliate_id: sponsorAffiliateId || null,
         })
         .select()
         .single();
@@ -149,6 +152,18 @@ serve(async (req: Request): Promise<Response> => {
         user_id: userId,
         global_role: "affiliate",
       }, { onConflict: "user_id" });
+
+    // Populate genealogy
+    const { error: genealogyError } = await supabase.rpc('populate_genealogy_for_affiliate', {
+      p_affiliate_id: affiliateId,
+    });
+
+    if (genealogyError) {
+      console.error("Error populating genealogy:", genealogyError);
+      // Don't fail the whole request for this
+    } else {
+      console.log("Genealogy populated for affiliate:", affiliateId);
+    }
 
     // Create billing subscription record
     const { error: subError } = await supabase

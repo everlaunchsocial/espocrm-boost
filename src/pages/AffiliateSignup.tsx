@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Check, Loader2, Zap, Crown, Building2, Sparkles } from 'lucide-react';
+import { Check, Loader2, Zap, Crown, Building2, Sparkles, UserCheck } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface AffiliatePlan {
@@ -16,6 +16,11 @@ interface AffiliatePlan {
   monthly_price: number;
   demo_credits_per_month: number | null;
   stripe_price_id: string | null;
+}
+
+interface SponsorInfo {
+  id: string;
+  username: string;
 }
 
 const planIcons: Record<string, React.ReactNode> = {
@@ -28,6 +33,7 @@ const planIcons: Record<string, React.ReactNode> = {
 export default function AffiliateSignup() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const refUsername = searchParams.get('ref');
   
   const [plans, setPlans] = useState<AffiliatePlan[]>([]);
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
@@ -39,10 +45,14 @@ export default function AffiliateSignup() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [username, setUsername] = useState('');
+  const [sponsor, setSponsor] = useState<SponsorInfo | null>(null);
 
   useEffect(() => {
     loadPlans();
     checkAuth();
+    if (refUsername) {
+      loadSponsor(refUsername);
+    }
     
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user ?? null);
@@ -73,6 +83,21 @@ export default function AffiliateSignup() {
       setPlans(data || []);
     }
     setIsLoading(false);
+  };
+
+  const loadSponsor = async (refUser: string) => {
+    const { data, error } = await supabase
+      .from('affiliates')
+      .select('id, username')
+      .eq('username', refUser.toLowerCase())
+      .maybeSingle();
+
+    if (data && !error) {
+      setSponsor({ id: data.id, username: data.username });
+      console.log('Sponsor found:', data.username);
+    } else {
+      console.log('No sponsor found for ref:', refUser);
+    }
   };
 
   const handleAuth = async (e: React.FormEvent) => {
@@ -107,6 +132,7 @@ export default function AffiliateSignup() {
             emailRedirectTo: `${window.location.origin}/affiliate`,
             data: {
               username: username.toLowerCase(),
+              sponsor_affiliate_id: sponsor?.id || null,
             },
           },
         });
@@ -165,6 +191,8 @@ export default function AffiliateSignup() {
       .eq('user_id', user.id)
       .maybeSingle();
 
+    const sponsorId = sponsor?.id || user.user_metadata?.sponsor_affiliate_id || null;
+
     if (existingAffiliate) {
       // Update existing affiliate to free plan
       const { error } = await supabase
@@ -173,15 +201,19 @@ export default function AffiliateSignup() {
           affiliate_plan_id: plan.id,
           demo_credits_balance: plan.demo_credits_per_month,
           demo_credits_reset_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+          parent_affiliate_id: sponsorId,
         })
         .eq('id', existingAffiliate.id);
 
       if (error) throw error;
+
+      // Populate genealogy
+      await supabase.rpc('populate_genealogy_for_affiliate', { p_affiliate_id: existingAffiliate.id });
     } else {
       // Create new affiliate
       const usernameFromMeta = user.user_metadata?.username || email.split('@')[0];
       
-      const { error } = await supabase
+      const { data: newAffiliate, error } = await supabase
         .from('affiliates')
         .insert({
           user_id: user.id,
@@ -189,7 +221,10 @@ export default function AffiliateSignup() {
           affiliate_plan_id: plan.id,
           demo_credits_balance: plan.demo_credits_per_month,
           demo_credits_reset_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-        });
+          parent_affiliate_id: sponsorId,
+        })
+        .select()
+        .single();
 
       if (error) throw error;
 
@@ -200,6 +235,11 @@ export default function AffiliateSignup() {
           user_id: user.id,
           global_role: 'affiliate',
         }, { onConflict: 'user_id' });
+
+      // Populate genealogy
+      if (newAffiliate) {
+        await supabase.rpc('populate_genealogy_for_affiliate', { p_affiliate_id: newAffiliate.id });
+      }
     }
 
     toast.success('Welcome to EverLaunch! Redirecting to your dashboard...');
@@ -207,12 +247,15 @@ export default function AffiliateSignup() {
   };
 
   const startStripeCheckout = async (plan: AffiliatePlan) => {
+    const sponsorId = sponsor?.id || user.user_metadata?.sponsor_affiliate_id || null;
+
     const { data, error } = await supabase.functions.invoke('affiliate-checkout', {
       body: {
         plan_code: plan.code,
         user_id: user.id,
         email: user.email,
         username: user.user_metadata?.username || email.split('@')[0],
+        sponsor_affiliate_id: sponsorId,
       },
     });
 
@@ -255,6 +298,15 @@ export default function AffiliateSignup() {
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
             Earn 30% commissions selling AI receptionists to local businesses. Choose your plan to get started.
           </p>
+          
+          {sponsor && (
+            <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full">
+              <UserCheck className="h-4 w-4 text-primary" />
+              <span className="text-sm">
+                Referred by <strong className="text-primary">{sponsor.username}</strong>
+              </span>
+            </div>
+          )}
         </div>
 
         {showAuth && !user && (
