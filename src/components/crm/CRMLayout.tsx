@@ -93,7 +93,7 @@ export function CRMLayout({ children }: CRMLayoutProps) {
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
-    navigate('/affiliate-signup');
+    navigate('/auth');
   };
 
   const getRoleLabel = () => {
