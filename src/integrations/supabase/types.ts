@@ -1481,6 +1481,7 @@ export type Database = {
           last_name: string
           notes: string | null
           phone: string | null
+          pipeline_status: string
           service_category: string | null
           source: string
           state: string | null
@@ -1509,6 +1510,7 @@ export type Database = {
           last_name: string
           notes?: string | null
           phone?: string | null
+          pipeline_status?: string
           service_category?: string | null
           source?: string
           state?: string | null
@@ -1537,6 +1539,7 @@ export type Database = {
           last_name?: string
           notes?: string | null
           phone?: string | null
+          pipeline_status?: string
           service_category?: string | null
           source?: string
           state?: string | null

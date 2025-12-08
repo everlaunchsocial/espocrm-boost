@@ -17,6 +17,7 @@ interface RecentLead {
   phone: string | null;
   email: string | null;
   source: string;
+  pipeline_status: string;
 }
 
 export function useCustomerDashboardData() {
@@ -107,6 +108,7 @@ export function useCustomerDashboardData() {
           phone: (meta.phone as string) || null,
           email: (meta.email as string) || null,
           source: (meta.source as string) || 'AI Assistant',
+          pipeline_status: (meta.pipeline_status as string) || 'new_lead',
         };
       });
     },

@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Skeleton } from '@/components/ui/skeleton';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
+import { PipelineStatusBadge } from '@/components/crm/PipelineStatusBadge';
 import { 
   Phone, 
   MessageSquare, 
@@ -249,8 +250,8 @@ export default function CustomerDashboard() {
                       <th className="text-left py-2 px-3 text-sm font-medium text-muted-foreground">Date</th>
                       <th className="text-left py-2 px-3 text-sm font-medium text-muted-foreground">Name</th>
                       <th className="text-left py-2 px-3 text-sm font-medium text-muted-foreground">Phone</th>
-                      <th className="text-left py-2 px-3 text-sm font-medium text-muted-foreground">Email</th>
                       <th className="text-left py-2 px-3 text-sm font-medium text-muted-foreground">Source</th>
+                      <th className="text-left py-2 px-3 text-sm font-medium text-muted-foreground">Status</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -265,13 +266,13 @@ export default function CustomerDashboard() {
                         <td className="py-3 px-3 text-sm text-muted-foreground">
                           {lead.phone || '—'}
                         </td>
-                        <td className="py-3 px-3 text-sm text-muted-foreground">
-                          {lead.email || '—'}
-                        </td>
                         <td className="py-3 px-3 text-sm">
                           <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary">
                             {lead.source}
                           </span>
+                        </td>
+                        <td className="py-3 px-3 text-sm">
+                          <PipelineStatusBadge status={lead.pipeline_status || 'new_lead'} />
                         </td>
                       </tr>
                     ))}
