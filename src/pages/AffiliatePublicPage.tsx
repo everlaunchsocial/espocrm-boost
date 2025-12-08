@@ -1,9 +1,10 @@
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useEffect } from 'react';
 import { useAffiliateContext } from '@/hooks/useAffiliateContext';
 import { storeAffiliateAttribution } from '@/utils/affiliateAttribution';
 import { RequestDemoForm } from '@/components/affiliate/RequestDemoForm';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { 
   UserCheck, 
   Phone, 
@@ -12,11 +13,13 @@ import {
   Clock, 
   Shield,
   Zap,
-  Users
+  Users,
+  ArrowRight
 } from 'lucide-react';
 
 export default function AffiliatePublicPage() {
   const { username } = useParams<{ username: string }>();
+  const navigate = useNavigate();
   const { affiliate, isLoading, notFound, error } = useAffiliateContext(username);
 
   // Store affiliate attribution in session when page loads
@@ -129,6 +132,21 @@ export default function AffiliatePublicPage() {
                 and books appointments — all while you sleep.
               </p>
               
+              {/* Buy Now CTA */}
+              <div className="mb-8">
+                <Button 
+                  size="lg" 
+                  onClick={() => navigate(`/buy?ref=${affiliate.username}`)}
+                  className="w-full sm:w-auto"
+                >
+                  Get Started Now
+                  <ArrowRight className="h-4 w-4 ml-2" />
+                </Button>
+                <p className="text-sm text-muted-foreground mt-2">
+                  Or request a personalized demo below →
+                </p>
+              </div>
+
               {/* Trust indicators */}
               <div className="flex flex-wrap gap-4 mb-8">
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
