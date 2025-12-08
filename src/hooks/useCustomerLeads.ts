@@ -11,6 +11,7 @@ export interface CustomerLead {
   source: string;
   message: string | null;
   notes: string | null;
+  pipeline_status: string;
 }
 
 export type DateRangeFilter = 'last7days' | 'last30days' | 'thisMonth' | 'allTime';
@@ -99,6 +100,7 @@ export function useCustomerLeads(options: UseCustomerLeadsOptions = {}) {
           source: normalizeSource((meta.source as string) || ''),
           message: (meta.message as string) || null,
           notes: (meta.notes as string) || null,
+          pipeline_status: (meta.pipeline_status as string) || 'new_lead',
         };
       });
 
@@ -169,6 +171,7 @@ export function useCustomerLead(leadId: string | null) {
         source: normalizeSource((meta.source as string) || ''),
         message: (meta.message as string) || null,
         notes: (meta.notes as string) || null,
+        pipeline_status: (meta.pipeline_status as string) || 'new_lead',
       };
     },
     enabled: !!leadId,

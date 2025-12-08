@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useCustomerLeads, useCustomerLead, CustomerLead, DateRangeFilter, SourceFilter } from '@/hooks/useCustomerLeads';
+import { PipelineStatusBadge } from '@/components/crm/PipelineStatusBadge';
 import { format } from 'date-fns';
 
 const ITEMS_PER_PAGE = 25;
@@ -80,6 +81,7 @@ function LeadDetailModal({
                   {getSourceIcon(lead.source)}
                   {lead.source}
                 </Badge>
+                <PipelineStatusBadge status={lead.pipeline_status} />
               </div>
             </div>
 
@@ -272,6 +274,7 @@ export default function CustomerLeads() {
                         <TableHead>Phone</TableHead>
                         <TableHead>Email</TableHead>
                         <TableHead>Source</TableHead>
+                        <TableHead>Status</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -298,6 +301,9 @@ export default function CustomerLeads() {
                               {getSourceIcon(lead.source)}
                               {lead.source}
                             </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <PipelineStatusBadge status={lead.pipeline_status} />
                           </TableCell>
                         </TableRow>
                       ))}
