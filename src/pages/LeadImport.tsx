@@ -149,7 +149,7 @@ export default function LeadImport() {
     }
 
     try {
-      const result = await bulkImport.mutateAsync(parsedLeads);
+      const result = await bulkImport.mutateAsync({ leads: parsedLeads });
       setLastBatchId(result.batchId);
       setImportCount(result.count);
       setParsedLeads([]);

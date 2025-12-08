@@ -338,7 +338,7 @@ export function useLeads() {
 export function useAddLead() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (lead: Omit<Lead, 'id' | 'createdAt' | 'updatedAt'>) => {
+    mutationFn: async (lead: Omit<Lead, 'id' | 'createdAt' | 'updatedAt'> & { affiliateId?: string }) => {
       const { data, error } = await supabase.from('leads').insert({
         first_name: lead.firstName,
         last_name: lead.lastName,
@@ -362,6 +362,7 @@ export function useAddLead() {
         has_website: lead.hasWebsite,
         notes: lead.notes,
         import_batch_id: lead.importBatchId,
+        affiliate_id: lead.affiliateId || null,
       }).select().single();
       if (error) throw error;
 
@@ -432,7 +433,7 @@ export function useDeleteLead() {
 export function useBulkImportLeads() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (leads: Array<Omit<Lead, 'id' | 'createdAt' | 'updatedAt'>>) => {
+    mutationFn: async ({ leads, affiliateId }: { leads: Array<Omit<Lead, 'id' | 'createdAt' | 'updatedAt'>>, affiliateId?: string }) => {
       const batchId = crypto.randomUUID();
       
       const leadsToInsert = leads.map(lead => ({
@@ -458,6 +459,7 @@ export function useBulkImportLeads() {
         has_website: lead.hasWebsite,
         notes: lead.notes,
         import_batch_id: batchId,
+        affiliate_id: affiliateId || null,
       }));
 
       const { data, error } = await supabase
