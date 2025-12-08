@@ -34,6 +34,7 @@ import AffiliatePublicPage from "./pages/AffiliatePublicPage";
 import AffiliateSignup from "./pages/AffiliateSignup";
 import AffiliateSignupSuccess from "./pages/AffiliateSignupSuccess";
 import ResetPassword from "./pages/ResetPassword";
+import Auth from "./pages/Auth";
 import Product from "./pages/Product";
 import CustomerBuy from "./pages/CustomerBuy";
 import CustomerBuySuccess from "./pages/CustomerBuySuccess";
@@ -99,6 +100,9 @@ const App = () => (
           
           {/* Affiliate replicated URL - public facing */}
           <Route path="/rep/:username" element={<AffiliatePublicPage />} />
+          
+          {/* Auth - public */}
+          <Route path="/auth" element={<Auth />} />
           
           {/* Affiliate signup - public */}
           <Route path="/affiliate-signup" element={<AffiliateSignup />} />

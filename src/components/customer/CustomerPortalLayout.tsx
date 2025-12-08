@@ -70,7 +70,7 @@ export function CustomerPortalLayout() {
   const handleLogout = async () => {
     await supabase.auth.signOut();
     toast.success('Logged out successfully');
-    navigate('/');
+    navigate('/auth');
   };
 
   // Redirect logic
