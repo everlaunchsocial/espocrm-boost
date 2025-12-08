@@ -1556,7 +1556,22 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      distribute_commissions: {
+        Args: {
+          p_customer_id: string
+          p_event_type?: string
+          p_gross_amount: number
+        }
+        Returns: undefined
+      }
+      is_admin: { Args: never; Returns: boolean }
+      test_distribute_commissions: {
+        Args: { p_customer_id: string; p_gross_amount: number }
+        Returns: {
+          message: string
+          success: boolean
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
