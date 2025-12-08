@@ -40,6 +40,7 @@ import AffiliateCommissions from "./pages/affiliate/AffiliateCommissions";
 import AffiliateTeam from "./pages/affiliate/AffiliateTeam";
 import AffiliateTraining from "./pages/affiliate/AffiliateTraining";
 import AffiliateSettings from "./pages/affiliate/AffiliateSettings";
+import AdminPayouts from "./pages/AdminPayouts";
 
 const queryClient = new QueryClient();
 
@@ -79,6 +80,7 @@ const App = () => (
           {/* CRM routes - inside CRM layout (for admins/super_admins) */}
           <Route element={<CRMLayout />}>
             <Route path="/" element={<Dashboard />} />
+            <Route path="/admin/payouts" element={<AdminPayouts />} />
             <Route path="/calendar" element={<Calendar />} />
             <Route path="/email" element={<Email />} />
             <Route path="/contacts" element={<Contacts />} />

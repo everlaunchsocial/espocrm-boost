@@ -15,6 +15,7 @@ import {
   CommissionRow,
 } from '@/hooks/useAffiliateCommissions';
 import { useCurrentAffiliate } from '@/hooks/useCurrentAffiliate';
+import { useAffiliatePayouts, PayoutRow } from '@/hooks/usePayouts';
 
 function formatCurrency(amount: number): string {
   return new Intl.NumberFormat('en-US', {
@@ -394,6 +395,7 @@ export default function AffiliateCommissions() {
         <TabsList>
           <TabsTrigger value="personal">Personal Sales</TabsTrigger>
           <TabsTrigger value="team">Team Sales</TabsTrigger>
+          <TabsTrigger value="payouts">Payout History</TabsTrigger>
         </TabsList>
 
         <TabsContent value="personal">
@@ -403,7 +405,77 @@ export default function AffiliateCommissions() {
         <TabsContent value="team">
           <TeamTab />
         </TabsContent>
+
+        <TabsContent value="payouts">
+          <PayoutsTab />
+        </TabsContent>
       </Tabs>
     </div>
+  );
+}
+
+function PayoutsTab() {
+  const { data: payouts = [], isLoading } = useAffiliatePayouts();
+
+  if (isLoading) {
+    return (
+      <div className="space-y-2">
+        {[...Array(3)].map((_, i) => (
+          <Skeleton key={i} className="h-12 w-full" />
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <CheckCircle className="h-5 w-5" />
+          Your Payout History
+        </CardTitle>
+        <CardDescription>
+          A record of all payouts you've received
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        {payouts.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-12 text-center">
+            <DollarSign className="h-12 w-12 text-muted-foreground/50 mb-4" />
+            <h3 className="text-lg font-medium">No Payouts Yet</h3>
+            <p className="text-muted-foreground max-w-sm mt-2">
+              Pending commissions will be batched and paid out periodically.
+            </p>
+          </div>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Paid Date</TableHead>
+                <TableHead>Period</TableHead>
+                <TableHead className="text-right">Amount</TableHead>
+                <TableHead>Method</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {payouts.map((payout) => (
+                <TableRow key={payout.id}>
+                  <TableCell>{format(payout.paidAt, 'MMM d, yyyy')}</TableCell>
+                  <TableCell>
+                    {format(payout.periodStart, 'MMM d')} - {format(payout.periodEnd, 'MMM d, yyyy')}
+                  </TableCell>
+                  <TableCell className="text-right font-bold">
+                    {formatCurrency(payout.amount)}
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="secondary">{payout.method || 'manual'}</Badge>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
+      </CardContent>
+    </Card>
   );
 }
