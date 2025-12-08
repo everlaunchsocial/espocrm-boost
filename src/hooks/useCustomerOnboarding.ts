@@ -176,10 +176,11 @@ export function useCustomerOnboarding() {
     if (!customerProfile) return false;
     
     try {
+      // Use user_id for update since RLS policy checks user_id = auth.uid()
       const { error } = await supabase
         .from('customer_profiles')
         .update(updates as Record<string, unknown>)
-        .eq('id', customerProfile.id);
+        .eq('user_id', customerProfile.user_id);
       
       if (error) throw error;
       
