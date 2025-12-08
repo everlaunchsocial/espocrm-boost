@@ -31,6 +31,9 @@ import Unauthorized from "./pages/Unauthorized";
 import AffiliatePublicPage from "./pages/AffiliatePublicPage";
 import AffiliateSignup from "./pages/AffiliateSignup";
 import AffiliateSignupSuccess from "./pages/AffiliateSignupSuccess";
+import Product from "./pages/Product";
+import CustomerBuy from "./pages/CustomerBuy";
+import CustomerBuySuccess from "./pages/CustomerBuySuccess";
 
 // Affiliate pages
 import AffiliateDashboard from "./pages/affiliate/AffiliateDashboard";
@@ -59,6 +62,11 @@ const App = () => (
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/biz" element={<BusinessOpportunity />} />
           <Route path="/unauthorized" element={<Unauthorized />} />
+          
+          {/* Product & Customer purchase pages - public */}
+          <Route path="/product" element={<Product />} />
+          <Route path="/buy" element={<CustomerBuy />} />
+          <Route path="/buy/success" element={<CustomerBuySuccess />} />
           
           {/* Affiliate replicated URL - public facing */}
           <Route path="/rep/:username" element={<AffiliatePublicPage />} />
