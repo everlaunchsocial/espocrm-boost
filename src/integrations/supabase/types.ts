@@ -152,32 +152,81 @@ export type Database = {
           },
         ]
       }
+      affiliate_plans: {
+        Row: {
+          code: string
+          created_at: string | null
+          demo_credits_per_month: number | null
+          id: string
+          is_active: boolean
+          monthly_price: number
+          name: string
+          stripe_price_id: string | null
+        }
+        Insert: {
+          code: string
+          created_at?: string | null
+          demo_credits_per_month?: number | null
+          id?: string
+          is_active?: boolean
+          monthly_price: number
+          name: string
+          stripe_price_id?: string | null
+        }
+        Update: {
+          code?: string
+          created_at?: string | null
+          demo_credits_per_month?: number | null
+          id?: string
+          is_active?: boolean
+          monthly_price?: number
+          name?: string
+          stripe_price_id?: string | null
+        }
+        Relationships: []
+      }
       affiliates: {
         Row: {
+          affiliate_plan_id: string | null
           commission_plan_id: string | null
           created_at: string
+          demo_credits_balance: number | null
+          demo_credits_reset_at: string | null
           id: string
           parent_affiliate_id: string | null
           user_id: string
           username: string
         }
         Insert: {
+          affiliate_plan_id?: string | null
           commission_plan_id?: string | null
           created_at?: string
+          demo_credits_balance?: number | null
+          demo_credits_reset_at?: string | null
           id?: string
           parent_affiliate_id?: string | null
           user_id: string
           username: string
         }
         Update: {
+          affiliate_plan_id?: string | null
           commission_plan_id?: string | null
           created_at?: string
+          demo_credits_balance?: number | null
+          demo_credits_reset_at?: string | null
           id?: string
           parent_affiliate_id?: string | null
           user_id?: string
           username?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "affiliates_affiliate_plan_id_fkey"
+            columns: ["affiliate_plan_id"]
+            isOneToOne: false
+            referencedRelation: "affiliate_plans"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "affiliates_commission_plan_id_fkey"
             columns: ["commission_plan_id"]
@@ -196,6 +245,7 @@ export type Database = {
       }
       billing_subscriptions: {
         Row: {
+          affiliate_id: string | null
           created_at: string
           customer_id: string
           id: string
@@ -203,8 +253,10 @@ export type Database = {
           status: string
           stripe_customer_id: string | null
           stripe_subscription_id: string | null
+          subscription_type: string | null
         }
         Insert: {
+          affiliate_id?: string | null
           created_at?: string
           customer_id: string
           id?: string
@@ -212,8 +264,10 @@ export type Database = {
           status?: string
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
+          subscription_type?: string | null
         }
         Update: {
+          affiliate_id?: string | null
           created_at?: string
           customer_id?: string
           id?: string
@@ -221,8 +275,16 @@ export type Database = {
           status?: string
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
+          subscription_type?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "billing_subscriptions_affiliate_id_fkey"
+            columns: ["affiliate_id"]
+            isOneToOne: false
+            referencedRelation: "affiliates"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "billing_subscriptions_customer_id_fkey"
             columns: ["customer_id"]
