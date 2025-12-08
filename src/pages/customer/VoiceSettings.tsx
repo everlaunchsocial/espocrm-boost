@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useVoiceSettings, VoiceGender, VoiceStyle, ResponsePace } from '@/hooks/useVoiceSettings';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -17,16 +17,11 @@ export default function VoiceSettings() {
   const [hasChanges, setHasChanges] = useState(false);
 
   // Sync local state when settings load
-  useState(() => {
+  useEffect(() => {
     if (!isLoading) {
       setLocalSettings(settings);
     }
-  });
-
-  // Update local state when remote settings change
-  if (!isLoading && JSON.stringify(localSettings) !== JSON.stringify(settings) && !hasChanges) {
-    setLocalSettings(settings);
-  }
+  }, [isLoading, settings]);
 
   const handleChange = <K extends keyof typeof localSettings>(field: K, value: typeof localSettings[K]) => {
     setLocalSettings(prev => ({ ...prev, [field]: value }));

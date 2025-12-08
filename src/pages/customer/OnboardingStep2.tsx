@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CustomerOnboardingLayout } from '@/components/customer/CustomerOnboardingLayout';
 import { useCustomerOnboarding } from '@/hooks/useCustomerOnboarding';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -85,19 +84,16 @@ export default function OnboardingStep2() {
 
   if (isLoading) {
     return (
-      <CustomerOnboardingLayout currentStep={2}>
-        <div className="animate-pulse space-y-4">
-          <div className="h-8 bg-muted rounded w-1/2" />
-          <div className="h-4 bg-muted rounded w-3/4" />
-          <div className="h-40 bg-muted rounded" />
-        </div>
-      </CustomerOnboardingLayout>
+      <div className="animate-pulse space-y-4">
+        <div className="h-8 bg-muted rounded w-1/2" />
+        <div className="h-4 bg-muted rounded w-3/4" />
+        <div className="h-40 bg-muted rounded" />
+      </div>
     );
   }
 
   return (
-    <CustomerOnboardingLayout currentStep={2}>
-      <Card className="animate-fade-in">
+    <Card className="animate-fade-in">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Mic className="h-5 w-5 text-primary" />
@@ -231,6 +227,5 @@ export default function OnboardingStep2() {
           </div>
         </CardContent>
       </Card>
-    </CustomerOnboardingLayout>
   );
 }

@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CustomerOnboardingLayout } from '@/components/customer/CustomerOnboardingLayout';
 import { useCustomerOnboarding } from '@/hooks/useCustomerOnboarding';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -70,19 +69,16 @@ Thanks!`);
 
   if (isLoading) {
     return (
-      <CustomerOnboardingLayout currentStep={6}>
-        <div className="animate-pulse space-y-4">
-          <div className="h-8 bg-muted rounded w-1/2" />
-          <div className="h-4 bg-muted rounded w-3/4" />
-          <div className="h-40 bg-muted rounded" />
-        </div>
-      </CustomerOnboardingLayout>
+      <div className="animate-pulse space-y-4">
+        <div className="h-8 bg-muted rounded w-1/2" />
+        <div className="h-4 bg-muted rounded w-3/4" />
+        <div className="h-40 bg-muted rounded" />
+      </div>
     );
   }
 
   return (
-    <CustomerOnboardingLayout currentStep={6}>
-      <Card className="animate-fade-in">
+    <Card className="animate-fade-in">
         <CardHeader className="text-center">
           <div className="mx-auto mb-4 h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
             <PartyPopper className="h-8 w-8 text-primary" />
@@ -195,7 +191,7 @@ Thanks!`);
             <Button 
               onClick={handleActivate} 
               disabled={isActivating}
-              className="gap-2 bg-success hover:bg-success/90"
+              className="gap-2 bg-primary hover:bg-primary/90"
             >
               {isActivating ? 'Activating...' : 'Finish & Activate'}
               <Rocket className="h-4 w-4" />
@@ -203,6 +199,5 @@ Thanks!`);
           </div>
         </CardContent>
       </Card>
-    </CustomerOnboardingLayout>
   );
 }

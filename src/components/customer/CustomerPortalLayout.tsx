@@ -32,7 +32,9 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
   return (
     <nav className="flex flex-col gap-1">
       {navItems.map((item) => {
-        const isActive = location.pathname === item.path;
+        // Check if current path matches or is a sub-route of the nav item
+        const isActive = location.pathname === item.path || 
+          (item.path !== '/customer/dashboard' && location.pathname.startsWith(item.path));
         const Icon = item.icon;
         
         return (
