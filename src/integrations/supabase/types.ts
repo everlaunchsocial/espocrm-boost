@@ -400,6 +400,66 @@ export type Database = {
           },
         ]
       }
+      calendar_integrations: {
+        Row: {
+          access_token: string | null
+          appointments_enabled: boolean | null
+          availability_json: Json | null
+          created_at: string
+          customer_id: string
+          id: string
+          provider: string | null
+          refresh_token: string | null
+          send_reminders: boolean | null
+          slot_length_minutes: number | null
+          token_expires_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          access_token?: string | null
+          appointments_enabled?: boolean | null
+          availability_json?: Json | null
+          created_at?: string
+          customer_id: string
+          id?: string
+          provider?: string | null
+          refresh_token?: string | null
+          send_reminders?: boolean | null
+          slot_length_minutes?: number | null
+          token_expires_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          access_token?: string | null
+          appointments_enabled?: boolean | null
+          availability_json?: Json | null
+          created_at?: string
+          customer_id?: string
+          id?: string
+          provider?: string | null
+          refresh_token?: string | null
+          send_reminders?: boolean | null
+          slot_length_minutes?: number | null
+          token_expires_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "calendar_integrations_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: true
+            referencedRelation: "customer_minutes_summary"
+            referencedColumns: ["customer_id"]
+          },
+          {
+            foreignKeyName: "calendar_integrations_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: true
+            referencedRelation: "customer_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       call_logs: {
         Row: {
           action_items: Json | null
@@ -460,24 +520,33 @@ export type Database = {
       chat_settings: {
         Row: {
           customer_id: string
+          greeting_text: string | null
           id: string
           instructions: string | null
           tone: string | null
           updated_at: string
+          use_uploaded_docs: boolean | null
+          use_website_knowledge: boolean | null
         }
         Insert: {
           customer_id: string
+          greeting_text?: string | null
           id?: string
           instructions?: string | null
           tone?: string | null
           updated_at?: string
+          use_uploaded_docs?: boolean | null
+          use_website_knowledge?: boolean | null
         }
         Update: {
           customer_id?: string
+          greeting_text?: string | null
           id?: string
           instructions?: string | null
           tone?: string | null
           updated_at?: string
+          use_uploaded_docs?: boolean | null
+          use_website_knowledge?: boolean | null
         }
         Relationships: [
           {
@@ -595,6 +664,54 @@ export type Database = {
           },
         ]
       }
+      customer_knowledge_sources: {
+        Row: {
+          created_at: string
+          customer_id: string
+          file_name: string | null
+          id: string
+          source_type: string
+          status: string
+          storage_path: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          customer_id: string
+          file_name?: string | null
+          id?: string
+          source_type?: string
+          status?: string
+          storage_path?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          customer_id?: string
+          file_name?: string | null
+          id?: string
+          source_type?: string
+          status?: string
+          storage_path?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_knowledge_sources_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customer_minutes_summary"
+            referencedColumns: ["customer_id"]
+          },
+          {
+            foreignKeyName: "customer_knowledge_sources_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customer_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       customer_plans: {
         Row: {
           code: string
@@ -642,40 +759,73 @@ export type Database = {
           affiliate_id: string | null
           billing_cycle_end: string | null
           billing_cycle_start: string | null
+          business_name: string | null
+          business_type: string | null
+          contact_name: string | null
           created_at: string
           customer_plan_id: string | null
           id: string
+          lead_capture_enabled: boolean | null
+          lead_email: string | null
+          lead_sms_number: string | null
           minutes_included: number
           minutes_used: number
+          onboarding_completed_at: string | null
+          onboarding_current_step: number | null
+          onboarding_stage: string | null
           overage_rate: number
+          phone: string | null
           plan_name: string | null
           user_id: string
+          website_url: string | null
         }
         Insert: {
           affiliate_id?: string | null
           billing_cycle_end?: string | null
           billing_cycle_start?: string | null
+          business_name?: string | null
+          business_type?: string | null
+          contact_name?: string | null
           created_at?: string
           customer_plan_id?: string | null
           id?: string
+          lead_capture_enabled?: boolean | null
+          lead_email?: string | null
+          lead_sms_number?: string | null
           minutes_included?: number
           minutes_used?: number
+          onboarding_completed_at?: string | null
+          onboarding_current_step?: number | null
+          onboarding_stage?: string | null
           overage_rate?: number
+          phone?: string | null
           plan_name?: string | null
           user_id: string
+          website_url?: string | null
         }
         Update: {
           affiliate_id?: string | null
           billing_cycle_end?: string | null
           billing_cycle_start?: string | null
+          business_name?: string | null
+          business_type?: string | null
+          contact_name?: string | null
           created_at?: string
           customer_plan_id?: string | null
           id?: string
+          lead_capture_enabled?: boolean | null
+          lead_email?: string | null
+          lead_sms_number?: string | null
           minutes_included?: number
           minutes_used?: number
+          onboarding_completed_at?: string | null
+          onboarding_current_step?: number | null
+          onboarding_stage?: string | null
           overage_rate?: number
+          phone?: string | null
           plan_name?: string | null
           user_id?: string
+          website_url?: string | null
         }
         Relationships: [
           {
@@ -1684,27 +1834,39 @@ export type Database = {
       voice_settings: {
         Row: {
           customer_id: string
+          greeting_text: string | null
           id: string
+          language_code: string | null
+          response_pace: string | null
           updated_at: string
           voice_gender: string | null
           voice_pitch: number | null
           voice_speed: number | null
+          voice_style: string | null
         }
         Insert: {
           customer_id: string
+          greeting_text?: string | null
           id?: string
+          language_code?: string | null
+          response_pace?: string | null
           updated_at?: string
           voice_gender?: string | null
           voice_pitch?: number | null
           voice_speed?: number | null
+          voice_style?: string | null
         }
         Update: {
           customer_id?: string
+          greeting_text?: string | null
           id?: string
+          language_code?: string | null
+          response_pace?: string | null
           updated_at?: string
           voice_gender?: string | null
           voice_pitch?: number | null
           voice_speed?: number | null
+          voice_style?: string | null
         }
         Relationships: [
           {
