@@ -52,9 +52,14 @@ export function useUserRole(): UseUserRoleResult {
           .single();
 
         if (isMounted) {
-          if (error || !profile) {
+          if (error) {
+            console.error('Error fetching profile role:', error);
+            setRole('customer');
+          } else if (!profile) {
+            console.warn('No profile found for user:', user.id);
             setRole('customer');
           } else {
+            console.log('Profile role fetched:', profile.global_role);
             setRole(getGlobalRole(profile));
           }
           setIsLoading(false);
