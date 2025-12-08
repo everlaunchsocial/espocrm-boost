@@ -1963,6 +1963,7 @@ export type Database = {
         }[]
       }
       is_admin: { Args: never; Returns: boolean }
+      is_super_admin: { Args: never; Returns: boolean }
       log_minutes_usage_for_customer: {
         Args: {
           p_customer_id: string
