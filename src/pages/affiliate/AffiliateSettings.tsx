@@ -3,9 +3,22 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { Settings, User, Bell, CreditCard } from 'lucide-react';
+import { User, Bell, CreditCard, Link, Copy, ExternalLink } from 'lucide-react';
+import { useCurrentAffiliate } from '@/hooks/useCurrentAffiliate';
+import { getReplicatedUrl } from '@/utils/subdomainRouting';
+import { toast } from 'sonner';
 
 export default function AffiliateSettings() {
+  const { affiliate } = useCurrentAffiliate();
+  const replicatedUrl = affiliate?.username ? getReplicatedUrl(affiliate.username) : null;
+
+  const copyReplicatedUrl = () => {
+    if (replicatedUrl) {
+      navigator.clipboard.writeText(replicatedUrl);
+      toast.success('Replicated URL copied to clipboard!');
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -14,6 +27,39 @@ export default function AffiliateSettings() {
       </div>
 
       <div className="grid gap-6">
+        {/* Replicated Website URL Card */}
+        {replicatedUrl && (
+          <Card className="border-primary/20 bg-primary/5">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Link className="h-5 w-5" />
+                Your Replicated Website
+              </CardTitle>
+              <CardDescription>Share this link with prospects - it's your personal branded site</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center gap-2">
+                <Input 
+                  value={replicatedUrl} 
+                  readOnly 
+                  className="font-mono text-sm bg-background"
+                />
+                <Button variant="outline" size="icon" onClick={copyReplicatedUrl}>
+                  <Copy className="h-4 w-4" />
+                </Button>
+                <Button variant="outline" size="icon" asChild>
+                  <a href={replicatedUrl} target="_blank" rel="noopener noreferrer">
+                    <ExternalLink className="h-4 w-4" />
+                  </a>
+                </Button>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Username: <span className="font-medium text-foreground">{affiliate?.username}</span>
+              </p>
+            </CardContent>
+          </Card>
+        )}
+
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
