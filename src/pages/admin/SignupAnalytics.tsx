@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2, TrendingDown, Users, CreditCard, UserCheck } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Loader2, TrendingDown, Users, CreditCard, UserCheck, AlertTriangle, CheckCircle } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface SignupEvent {
@@ -16,11 +16,6 @@ interface SignupEvent {
   event_name: string;
   step: string | null;
   created_at: string;
-}
-
-interface StepStats {
-  step: string;
-  count: number;
 }
 
 const eventBadgeColor: Record<string, string> = {
@@ -40,8 +35,6 @@ const stepIcons: Record<string, React.ReactNode> = {
 export default function SignupAnalytics() {
   const [events, setEvents] = useState<SignupEvent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [filterEvent, setFilterEvent] = useState<string>('all');
-  const [stepStats, setStepStats] = useState<StepStats[]>([]);
 
   useEffect(() => {
     loadEvents();
@@ -58,37 +51,55 @@ export default function SignupAnalytics() {
       console.error('Error loading signup events:', error);
     } else {
       setEvents(data || []);
-      calculateStats(data || []);
     }
     setIsLoading(false);
   };
 
-  const calculateStats = (data: SignupEvent[]) => {
-    const stepCounts: Record<string, number> = {};
+  // Group events by email/username to identify abandonments vs completions
+  const { abandonments, completedSignups, stats } = useMemo(() => {
+    // Group by email (or username as fallback)
+    const userSessions: Record<string, SignupEvent[]> = {};
     
-    data.forEach(event => {
-      const step = event.step || 'unknown';
-      stepCounts[step] = (stepCounts[step] || 0) + 1;
+    events.forEach(event => {
+      const key = event.email || event.username || event.id;
+      if (!userSessions[key]) {
+        userSessions[key] = [];
+      }
+      userSessions[key].push(event);
     });
 
-    const stats = Object.entries(stepCounts).map(([step, count]) => ({
-      step,
-      count,
-    }));
+    const abandonmentList: { key: string; events: SignupEvent[]; lastStep: string }[] = [];
+    const completedList: { key: string; events: SignupEvent[] }[] = [];
 
-    setStepStats(stats);
-  };
+    Object.entries(userSessions).forEach(([key, userEvents]) => {
+      const hasPaymentCompleted = userEvents.some(e => e.event_name === 'payment_completed');
+      const hasAccountCreated = userEvents.some(e => e.event_name === 'account_created');
+      const hasSignupStarted = userEvents.some(e => e.event_name === 'signup_started');
 
-  const filteredEvents = filterEvent === 'all' 
-    ? events 
-    : events.filter(e => e.event_name === filterEvent);
+      if (hasPaymentCompleted || hasAccountCreated) {
+        completedList.push({ key, events: userEvents });
+      } else if (hasSignupStarted) {
+        // Determine last step reached
+        const hasStripeRedirect = userEvents.some(e => e.event_name === 'stripe_redirect');
+        const lastStep = hasStripeRedirect ? 'stripe_checkout' : 'account_form';
+        abandonmentList.push({ key, events: userEvents, lastStep });
+      }
+    });
 
-  // Calculate abandonment rate
-  const signupStarted = events.filter(e => e.event_name === 'signup_started').length;
-  const accountCreated = events.filter(e => e.event_name === 'account_created').length;
-  const abandonmentRate = signupStarted > 0 
-    ? Math.round(((signupStarted - accountCreated) / signupStarted) * 100) 
-    : 0;
+    // Calculate stats
+    const signupStarted = events.filter(e => e.event_name === 'signup_started').length;
+    const accountCreated = events.filter(e => e.event_name === 'account_created').length;
+    const stripeRedirects = events.filter(e => e.event_name === 'stripe_redirect').length;
+    const abandonmentRate = signupStarted > 0 
+      ? Math.round(((signupStarted - accountCreated) / signupStarted) * 100) 
+      : 0;
+
+    return {
+      abandonments: abandonmentList,
+      completedSignups: completedList,
+      stats: { signupStarted, accountCreated, stripeRedirects, abandonmentRate }
+    };
+  }, [events]);
 
   if (isLoading) {
     return (
@@ -114,7 +125,7 @@ export default function SignupAnalytics() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{signupStarted}</div>
+            <div className="text-2xl font-bold">{stats.signupStarted}</div>
           </CardContent>
         </Card>
         
@@ -125,7 +136,7 @@ export default function SignupAnalytics() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-500">{accountCreated}</div>
+            <div className="text-2xl font-bold text-green-500">{stats.accountCreated}</div>
           </CardContent>
         </Card>
         
@@ -138,7 +149,7 @@ export default function SignupAnalytics() {
           <CardContent>
             <div className="flex items-center gap-2">
               <TrendingDown className="h-5 w-5 text-destructive" />
-              <span className="text-2xl font-bold text-destructive">{abandonmentRate}%</span>
+              <span className="text-2xl font-bold text-destructive">{stats.abandonmentRate}%</span>
             </div>
           </CardContent>
         </Card>
@@ -150,98 +161,126 @@ export default function SignupAnalytics() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-yellow-500">
-              {events.filter(e => e.event_name === 'stripe_redirect').length}
-            </div>
+            <div className="text-2xl font-bold text-yellow-500">{stats.stripeRedirects}</div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Step Breakdown */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Abandonment by Step</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {stepStats.map(stat => (
-              <div key={stat.step} className="flex items-center gap-3 p-3 border rounded-lg">
-                <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center">
-                  {stepIcons[stat.step] || <Users className="h-4 w-4" />}
-                </div>
-                <div>
-                  <p className="font-medium capitalize">{stat.step.replace('_', ' ')}</p>
-                  <p className="text-2xl font-bold">{stat.count}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+      {/* Tabs for Abandonments and Completed */}
+      <Tabs defaultValue="abandonments" className="w-full">
+        <TabsList>
+          <TabsTrigger value="abandonments" className="flex items-center gap-2">
+            <AlertTriangle className="h-4 w-4" />
+            Abandonments ({abandonments.length})
+          </TabsTrigger>
+          <TabsTrigger value="completed" className="flex items-center gap-2">
+            <CheckCircle className="h-4 w-4" />
+            Completed Signups ({completedSignups.length})
+          </TabsTrigger>
+        </TabsList>
 
-      {/* Events Table */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Recent Events</CardTitle>
-          <Select value={filterEvent} onValueChange={setFilterEvent}>
-            <SelectTrigger className="w-48">
-              <SelectValue placeholder="Filter by event" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Events</SelectItem>
-              <SelectItem value="signup_started">Signup Started</SelectItem>
-              <SelectItem value="stripe_redirect">Stripe Redirect</SelectItem>
-              <SelectItem value="payment_completed">Payment Completed</SelectItem>
-              <SelectItem value="account_created">Account Created</SelectItem>
-            </SelectContent>
-          </Select>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Event</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Username</TableHead>
-                <TableHead>Plan</TableHead>
-                <TableHead>Referrer</TableHead>
-                <TableHead>Step</TableHead>
-                <TableHead>Date</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredEvents.map(event => (
-                <TableRow key={event.id}>
-                  <TableCell>
-                    <Badge className={eventBadgeColor[event.event_name] || ''}>
-                      {event.event_name.replace('_', ' ')}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="font-mono text-sm">{event.email || '-'}</TableCell>
-                  <TableCell className="font-mono text-sm">{event.username || '-'}</TableCell>
-                  <TableCell>
-                    {event.plan && (
-                      <Badge variant="outline" className="capitalize">{event.plan}</Badge>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">{event.referrer || '-'}</TableCell>
-                  <TableCell className="capitalize">{event.step?.replace('_', ' ') || '-'}</TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {format(new Date(event.created_at), 'MMM d, h:mm a')}
-                  </TableCell>
-                </TableRow>
-              ))}
-              {filteredEvents.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
-                    No signup events recorded yet
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+        <TabsContent value="abandonments" className="mt-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Users Who Started But Didn't Complete</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Username</TableHead>
+                    <TableHead>Plan</TableHead>
+                    <TableHead>Last Step</TableHead>
+                    <TableHead>Referrer</TableHead>
+                    <TableHead>Started At</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {abandonments.map(({ key, events: userEvents, lastStep }) => {
+                    const firstEvent = userEvents[userEvents.length - 1]; // Oldest event
+                    return (
+                      <TableRow key={key}>
+                        <TableCell className="font-mono text-sm">{firstEvent.email || '-'}</TableCell>
+                        <TableCell className="font-mono text-sm">{firstEvent.username || '-'}</TableCell>
+                        <TableCell>
+                          {firstEvent.plan && (
+                            <Badge variant="outline" className="capitalize">{firstEvent.plan}</Badge>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <Badge className={lastStep === 'stripe_checkout' ? 'bg-yellow-500/10 text-yellow-500' : 'bg-blue-500/10 text-blue-500'}>
+                            {lastStep === 'stripe_checkout' ? 'Stripe Checkout' : 'Account Form'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-muted-foreground">{firstEvent.referrer || '-'}</TableCell>
+                        <TableCell className="text-muted-foreground">
+                          {format(new Date(firstEvent.created_at), 'MMM d, h:mm a')}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                  {abandonments.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                        No abandonments recorded
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="completed" className="mt-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Successful Signups</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Username</TableHead>
+                    <TableHead>Plan</TableHead>
+                    <TableHead>Referrer</TableHead>
+                    <TableHead>Completed At</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {completedSignups.map(({ key, events: userEvents }) => {
+                    const completedEvent = userEvents.find(e => e.event_name === 'account_created') || userEvents[0];
+                    return (
+                      <TableRow key={key}>
+                        <TableCell className="font-mono text-sm">{completedEvent.email || '-'}</TableCell>
+                        <TableCell className="font-mono text-sm">{completedEvent.username || '-'}</TableCell>
+                        <TableCell>
+                          {completedEvent.plan && (
+                            <Badge variant="outline" className="capitalize">{completedEvent.plan}</Badge>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-muted-foreground">{completedEvent.referrer || '-'}</TableCell>
+                        <TableCell className="text-muted-foreground">
+                          {format(new Date(completedEvent.created_at), 'MMM d, h:mm a')}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                  {completedSignups.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                        No completed signups yet
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
