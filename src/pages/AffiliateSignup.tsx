@@ -49,24 +49,54 @@ export default function AffiliateSignup() {
 
   useEffect(() => {
     loadPlans();
-    checkAuth();
+    checkAuthAndRedirect();
     if (refUsername) {
       loadSponsor(refUsername);
     }
     
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       setUser(session?.user ?? null);
-      if (session?.user && selectedPlan) {
-        handlePlanSelection(selectedPlan);
+      
+      if (session?.user) {
+        // Check if already an affiliate - if so, redirect to dashboard
+        const { data: existingAffiliate } = await supabase
+          .from('affiliates')
+          .select('id')
+          .eq('user_id', session.user.id)
+          .maybeSingle();
+        
+        if (existingAffiliate) {
+          navigate('/affiliate');
+          return;
+        }
+        
+        // If there's a pending plan selection, continue with it
+        if (selectedPlan) {
+          handlePlanSelection(selectedPlan);
+        }
       }
     });
 
     return () => subscription.unsubscribe();
   }, []);
 
-  const checkAuth = async () => {
+  const checkAuthAndRedirect = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     setUser(user);
+    
+    if (user) {
+      // Check if already an affiliate - redirect to dashboard
+      const { data: existingAffiliate } = await supabase
+        .from('affiliates')
+        .select('id')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      
+      if (existingAffiliate) {
+        navigate('/affiliate');
+        return;
+      }
+    }
   };
 
   const loadPlans = async () => {
