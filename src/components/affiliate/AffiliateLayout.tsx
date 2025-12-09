@@ -23,7 +23,9 @@ import {
   User,
   Copy,
   ExternalLink,
+  UserX,
 } from 'lucide-react';
+import { useAffiliateAbandonments } from '@/hooks/useAffiliateAbandonments';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -45,6 +47,7 @@ interface AffiliateLayoutProps {
 
 const affiliateNavigation = [
   { name: 'Dashboard', href: '/affiliate', icon: LayoutDashboard },
+  { name: 'Abandonments', href: '/affiliate/abandonments', icon: UserX, hasBadge: true },
   { name: 'Calendar', href: '/affiliate/calendar', icon: CalendarDays },
   { name: 'Email', href: '/affiliate/email', icon: Mail },
   { name: 'Contacts', href: '/affiliate/contacts', icon: Users },
@@ -65,6 +68,7 @@ export function AffiliateLayout({ children }: AffiliateLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { role, isLoading, userId } = useUserRole();
   const { affiliate: currentAffiliate, isLoading: affiliateLoading, isImpersonating } = useCurrentAffiliate();
+  const { unviewedCount: abandonmentCount } = useAffiliateAbandonments();
 
   // State for affiliate data
   const [affiliateData, setAffiliateData] = useState<{ 
@@ -259,6 +263,7 @@ export function AffiliateLayout({ children }: AffiliateLayoutProps) {
               {affiliateNavigation.map((item) => {
                 const isActive = location.pathname === item.href ||
                   (item.href !== '/affiliate' && location.pathname.startsWith(item.href));
+                const showBadge = item.hasBadge && abandonmentCount > 0;
                 return (
                   <li key={item.name}>
                     <Link
@@ -272,7 +277,12 @@ export function AffiliateLayout({ children }: AffiliateLayoutProps) {
                       )}
                     >
                       <item.icon className="h-5 w-5" />
-                      {item.name}
+                      <span className="flex-1">{item.name}</span>
+                      {showBadge && (
+                        <span className="flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-destructive px-1.5 text-[10px] font-bold text-destructive-foreground">
+                          {abandonmentCount > 99 ? '99+' : abandonmentCount}
+                        </span>
+                      )}
                     </Link>
                   </li>
                 );

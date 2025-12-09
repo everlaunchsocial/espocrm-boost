@@ -144,6 +144,7 @@ export default function AffiliateSignup() {
         username: username || null,
         plan: planCode || null,
         referrer: sponsor?.username || null,
+        referrer_affiliate_id: sponsor?.id || null,
         event_name: eventName,
         step: step,
       });
