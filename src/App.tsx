@@ -49,6 +49,7 @@ import AffiliateCommissions from "./pages/affiliate/AffiliateCommissions";
 import AffiliateTeam from "./pages/affiliate/AffiliateTeam";
 import AffiliateTraining from "./pages/affiliate/AffiliateTraining";
 import AffiliateSettings from "./pages/affiliate/AffiliateSettings";
+import AffiliateAbandonments from "./pages/affiliate/AffiliateAbandonments";
 import AdminPayouts from "./pages/AdminPayouts";
 import AdminCustomerUsage from "./pages/AdminCustomerUsage";
 import CustomerUsage from "./pages/CustomerUsage";
@@ -165,6 +166,7 @@ const App = () => (
           {/* Affiliate routes - inside AffiliateLayout */}
           <Route element={<AffiliateLayout />}>
             <Route path="/affiliate" element={<AffiliateDashboard />} />
+            <Route path="/affiliate/abandonments" element={<AffiliateAbandonments />} />
             <Route path="/affiliate/leads" element={<AffiliateLeads />} />
             <Route path="/affiliate/demos" element={<AffiliateDemos />} />
             <Route path="/affiliate/demos/:id" element={<DemoDetail />} />

@@ -91,13 +91,14 @@ const AffiliateSignupAccount = () => {
     return () => clearTimeout(timeoutId);
   };
 
-  const logSignupEvent = async (eventName: string, step: string) => {
+  const logSignupEvent = async (eventName: string, step: string, sponsorAffiliateId?: string | null) => {
     try {
       await supabase.from('signup_events').insert({
         email: formData.email || null,
         username: formData.username || null,
         plan: selectedPlan?.code || null,
         referrer: referrer || null,
+        referrer_affiliate_id: sponsorAffiliateId || null,
         event_name: eventName,
         step: step,
       });
@@ -126,8 +127,19 @@ const AffiliateSignupAccount = () => {
 
     setIsLoading(true);
 
-    // Log signup started event
-    await logSignupEvent('signup_started', 'account_form');
+    // First, look up sponsor affiliate ID if referrer exists
+    let sponsorAffiliateId: string | null = null;
+    if (referrer) {
+      const { data: sponsorData } = await supabase.rpc('get_affiliate_id_by_username', {
+        p_username: referrer.toLowerCase()
+      });
+      if (sponsorData) {
+        sponsorAffiliateId = sponsorData;
+      }
+    }
+
+    // Log signup started event with sponsor ID
+    await logSignupEvent('signup_started', 'account_form', sponsorAffiliateId);
 
     try {
       // Step 1: Create Supabase auth user
@@ -151,19 +163,7 @@ const AffiliateSignupAccount = () => {
 
       const userId = authData.user.id;
 
-      // Step 2: Look up sponsor affiliate ID if referrer exists
-      let sponsorAffiliateId: string | null = null;
-      if (referrer) {
-        const { data: sponsorData } = await supabase
-          .from("affiliates")
-          .select("id")
-          .eq("username", referrer.toLowerCase())
-          .maybeSingle();
-        
-        if (sponsorData) {
-          sponsorAffiliateId = sponsorData.id;
-        }
-      }
+      // Note: sponsorAffiliateId already looked up above
 
       // Step 3: Handle FREE vs PAID plans differently
       if (selectedPlan.price === 0) {
@@ -206,7 +206,7 @@ const AffiliateSignupAccount = () => {
         }
 
         // Log account created event
-        await logSignupEvent('account_created', 'complete');
+        await logSignupEvent('account_created', 'complete', sponsorAffiliateId);
 
         // Clear localStorage
         localStorage.removeItem("selectedAffiliatePlan");
@@ -218,7 +218,7 @@ const AffiliateSignupAccount = () => {
         // PAID PLAN: Redirect to Stripe checkout
         
         // Log stripe redirect event
-        await logSignupEvent('stripe_redirect', 'stripe_checkout');
+        await logSignupEvent('stripe_redirect', 'stripe_checkout', sponsorAffiliateId);
 
         // Store user data for post-checkout processing
         localStorage.setItem("pendingAffiliateUserId", userId);

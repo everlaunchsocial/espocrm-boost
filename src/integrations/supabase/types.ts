@@ -1725,8 +1725,10 @@ export type Database = {
           id: string
           plan: string | null
           referrer: string | null
+          referrer_affiliate_id: string | null
           step: string | null
           username: string | null
+          viewed_by_affiliate: boolean | null
         }
         Insert: {
           created_at?: string | null
@@ -1735,8 +1737,10 @@ export type Database = {
           id?: string
           plan?: string | null
           referrer?: string | null
+          referrer_affiliate_id?: string | null
           step?: string | null
           username?: string | null
+          viewed_by_affiliate?: boolean | null
         }
         Update: {
           created_at?: string | null
@@ -1745,10 +1749,20 @@ export type Database = {
           id?: string
           plan?: string | null
           referrer?: string | null
+          referrer_affiliate_id?: string | null
           step?: string | null
           username?: string | null
+          viewed_by_affiliate?: boolean | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "signup_events_referrer_affiliate_id_fkey"
+            columns: ["referrer_affiliate_id"]
+            isOneToOne: false
+            referencedRelation: "affiliates"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       tasks: {
         Row: {
