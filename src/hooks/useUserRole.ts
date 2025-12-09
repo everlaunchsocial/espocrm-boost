@@ -30,10 +30,23 @@ export function useUserRole(): UseUserRoleResult {
     setIsLoading(true);
     
     try {
-      // Use getSession() to ensure JWT is ready before making RPC calls
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      // Wait for session with retry logic for initial page load
+      let session = null;
+      let attempts = 0;
+      const maxAttempts = 3;
       
-      if (!session || sessionError) {
+      while (!session && attempts < maxAttempts) {
+        const { data, error } = await supabase.auth.getSession();
+        session = data?.session;
+        
+        if (!session && attempts < maxAttempts - 1) {
+          // Brief delay to allow auth to initialize
+          await new Promise(r => setTimeout(r, 150));
+        }
+        attempts++;
+      }
+      
+      if (!session) {
         setRole('customer');
         setUserId(null);
         setIsLoading(false);
@@ -73,7 +86,7 @@ export function useUserRole(): UseUserRoleResult {
     fetchUserRole();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+      if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
         fetchUserRole();
       } else if (event === 'SIGNED_OUT') {
         setRole('customer');
