@@ -47,20 +47,60 @@ const affiliateNavigation = [
   { name: 'Settings', href: '/affiliate/settings', icon: Settings },
 ];
 
+// Force rebuild - timestamp: 2025-12-09T15:30:00Z
+console.log('[AffiliateLayout] === COMPONENT FILE LOADED ===');
+
 export function AffiliateLayout({ children }: AffiliateLayoutProps) {
+  console.log('[AffiliateLayout] === COMPONENT FUNCTION CALLED ===');
+  
   const location = useLocation();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const { role, isLoading } = useUserRole();
+  const { role, isLoading, userId } = useUserRole();
   const { affiliate, isLoading: affiliateLoading } = useCurrentAffiliate();
   const [sponsorName, setSponsorName] = useState<string | null>(null);
 
   console.log('[AffiliateLayout] Hook results:', { 
     role, 
     isLoading, 
+    userId,
     affiliate, 
     affiliateLoading 
   });
+
+  // Direct RPC test on mount
+  useEffect(() => {
+    const testDirectRpc = async () => {
+      console.log('[AffiliateLayout] === DIRECT RPC TEST START ===');
+      
+      // Test 1: Get current session
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      console.log('[AffiliateLayout] Session test:', { 
+        hasSession: !!sessionData?.session,
+        userId: sessionData?.session?.user?.id,
+        email: sessionData?.session?.user?.email,
+        sessionError 
+      });
+      
+      // Test 2: Direct RPC call
+      const { data: rpcRole, error: rpcError } = await supabase.rpc('get_my_global_role');
+      console.log('[AffiliateLayout] Direct RPC get_my_global_role:', { rpcRole, rpcError });
+      
+      // Test 3: Direct affiliates query
+      if (sessionData?.session?.user?.id) {
+        const { data: affiliateData, error: affiliateError } = await supabase
+          .from('affiliates')
+          .select('id, username, user_id, parent_affiliate_id')
+          .eq('user_id', sessionData.session.user.id)
+          .maybeSingle();
+        console.log('[AffiliateLayout] Direct affiliates query:', { affiliateData, affiliateError });
+      }
+      
+      console.log('[AffiliateLayout] === DIRECT RPC TEST END ===');
+    };
+    
+    testDirectRpc();
+  }, []);
 
   const replicatedUrl = affiliate?.username ? getReplicatedUrl(affiliate.username) : null;
   
