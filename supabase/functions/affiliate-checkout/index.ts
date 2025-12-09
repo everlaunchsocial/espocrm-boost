@@ -84,7 +84,10 @@ serve(async (req: Request): Promise<Response> => {
     }
 
     // Get base URL for redirects
-    const origin = req.headers.get("origin") || "https://tryeverlaunch.com";
+    // Use the request origin, or fallback to the referer header's origin, or the staging domain
+    const referer = req.headers.get("referer");
+    const refererOrigin = referer ? new URL(referer).origin : null;
+    const origin = req.headers.get("origin") || refererOrigin || "https://espocrm-boost.lovable.app";
 
     // Dynamic import of Stripe
     const Stripe = (await import("https://esm.sh/stripe@14.14.0")).default;
