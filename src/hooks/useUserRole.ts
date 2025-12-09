@@ -1,6 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
+// Force rebuild - timestamp: 2025-12-09T15:30:00Z
+console.log('[useUserRole] === HOOK FILE LOADED ===');
+
 export type GlobalRole = 'super_admin' | 'admin' | 'affiliate' | 'customer';
 
 interface UseUserRoleResult {
