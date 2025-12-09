@@ -27,7 +27,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useUserRole } from '@/hooks/useUserRole';
-import { useCurrentAffiliate } from '@/hooks/useCurrentAffiliate';
+
 
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -52,35 +52,54 @@ export function AffiliateLayout({ children }: AffiliateLayoutProps) {
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { role, isLoading } = useUserRole();
-  const { affiliate } = useCurrentAffiliate();
+  
+  // Direct inline state for affiliate data (bypassing hook)
+  const [affiliateData, setAffiliateData] = useState<{ username: string; parent_affiliate_id: string | null } | null>(null);
   const [sponsorName, setSponsorName] = useState<string | null>(null);
 
-  // Build referral URL
-  const replicatedUrl = affiliate?.username 
-    ? `https://tryeverlaunch.com/${affiliate.username}` 
-    : null;
-
-  // Fetch sponsor name when affiliate loads
+  // Fetch affiliate and sponsor data directly
   useEffect(() => {
-    const fetchSponsor = async () => {
-      if (!affiliate?.parent_affiliate_id) {
-        setSponsorName(null);
+    const fetchAffiliateData = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        console.log('[AffiliateLayout] No user found');
         return;
       }
 
-      const { data } = await supabase
+      console.log('[AffiliateLayout] Fetching affiliate for user:', user.id);
+      
+      const { data: affiliate, error } = await supabase
         .from('affiliates')
-        .select('username')
-        .eq('id', affiliate.parent_affiliate_id)
+        .select('id, username, parent_affiliate_id')
+        .eq('user_id', user.id)
         .maybeSingle();
 
-      if (data) {
-        setSponsorName(data.username);
+      console.log('[AffiliateLayout] Affiliate data:', affiliate, 'Error:', error);
+      
+      if (affiliate) {
+        setAffiliateData(affiliate);
+        
+        // Fetch sponsor if exists
+        if (affiliate.parent_affiliate_id) {
+          const { data: sponsor } = await supabase
+            .from('affiliates')
+            .select('username')
+            .eq('id', affiliate.parent_affiliate_id)
+            .maybeSingle();
+          
+          console.log('[AffiliateLayout] Sponsor:', sponsor?.username);
+          setSponsorName(sponsor?.username || null);
+        }
       }
     };
 
-    fetchSponsor();
-  }, [affiliate?.parent_affiliate_id]);
+    fetchAffiliateData();
+  }, []);
+
+  // Build referral URL
+  const replicatedUrl = affiliateData?.username 
+    ? `https://tryeverlaunch.com/${affiliateData.username}` 
+    : null;
 
   const copyReplicatedUrl = () => {
     if (replicatedUrl) {
