@@ -92,6 +92,14 @@ export default function UpgradePlanSection({ currentPlanCode, onUpgradeComplete 
       const data = response.data;
 
       if (data.success) {
+        // Check if we need to redirect to Stripe checkout
+        if (data.requiresCheckout && data.checkoutUrl) {
+          toast.info('Redirecting to payment...');
+          window.location.href = data.checkoutUrl;
+          return;
+        }
+
+        // Existing subscription was upgraded successfully
         toast.success(data.message || `Upgraded to ${selectedPlan.name}!`);
         setConfirmDialogOpen(false);
         onUpgradeComplete?.();

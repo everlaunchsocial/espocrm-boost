@@ -65,7 +65,7 @@ Deno.serve(async (req) => {
     // Get affiliate
     const { data: affiliate, error: affError } = await supabase
       .from("affiliates")
-      .select("id, affiliate_plan_id")
+      .select("id, affiliate_plan_id, username")
       .eq("user_id", user.id)
       .single();
 
@@ -108,6 +108,13 @@ Deno.serve(async (req) => {
       );
     }
 
+    if (!newPlan.stripe_price_id) {
+      return new Response(
+        JSON.stringify({ error: "New plan is not available for subscription" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     // Validate upgrade (not downgrade or same)
     const planHierarchy: Record<string, number> = { free: 0, basic: 1, pro: 2, agency: 3 };
     const currentLevel = planHierarchy[currentPlan.code] ?? 0;
@@ -129,11 +136,40 @@ Deno.serve(async (req) => {
       .eq("status", "active")
       .single();
 
+    // If no active subscription exists, create a new checkout session
     if (subError || !subscription?.stripe_subscription_id) {
-      console.error("No active subscription found:", subError);
+      console.log("No active subscription found - creating new checkout session");
+      
+      // Determine site URL for redirects
+      const siteUrl = Deno.env.get("SITE_URL") || "https://espocrm-boost.lovable.app";
+      
+      // Create Stripe checkout session for the new plan
+      const session = await stripe.checkout.sessions.create({
+        mode: "subscription",
+        payment_method_types: ["card"],
+        line_items: [{ price: newPlan.stripe_price_id, quantity: 1 }],
+        success_url: `${siteUrl}/affiliate/settings?upgrade=success&plan=${newPlanCode}`,
+        cancel_url: `${siteUrl}/affiliate/settings?upgrade=cancelled`,
+        customer_email: user.email || undefined,
+        metadata: {
+          user_id: user.id,
+          affiliate_id: affiliate.id,
+          plan_code: newPlanCode,
+          is_upgrade: "true",
+          previous_plan: currentPlan.code,
+        },
+      });
+
+      console.log("Created checkout session:", session.id);
+
       return new Response(
-        JSON.stringify({ error: "No active subscription found. Please contact support." }),
-        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({ 
+          success: true, 
+          requiresCheckout: true,
+          checkoutUrl: session.url,
+          message: "Redirecting to payment..."
+        }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
@@ -143,16 +179,35 @@ Deno.serve(async (req) => {
     const stripeSubscription = await stripe.subscriptions.retrieve(subscription.stripe_subscription_id);
     
     if (!stripeSubscription || stripeSubscription.status !== "active") {
-      return new Response(
-        JSON.stringify({ error: "Subscription is not active" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
+      // If subscription exists but is not active, create new checkout
+      console.log("Subscription is not active - creating new checkout session");
+      
+      const siteUrl = Deno.env.get("SITE_URL") || "https://espocrm-boost.lovable.app";
+      
+      const session = await stripe.checkout.sessions.create({
+        mode: "subscription",
+        payment_method_types: ["card"],
+        line_items: [{ price: newPlan.stripe_price_id, quantity: 1 }],
+        success_url: `${siteUrl}/affiliate/settings?upgrade=success&plan=${newPlanCode}`,
+        cancel_url: `${siteUrl}/affiliate/settings?upgrade=cancelled`,
+        customer_email: user.email || undefined,
+        metadata: {
+          user_id: user.id,
+          affiliate_id: affiliate.id,
+          plan_code: newPlanCode,
+          is_upgrade: "true",
+          previous_plan: currentPlan.code,
+        },
+      });
 
-    if (!newPlan.stripe_price_id) {
       return new Response(
-        JSON.stringify({ error: "New plan is not available for subscription" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({ 
+          success: true, 
+          requiresCheckout: true,
+          checkoutUrl: session.url,
+          message: "Redirecting to payment..."
+        }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
