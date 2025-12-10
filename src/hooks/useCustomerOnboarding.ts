@@ -367,11 +367,10 @@ export function useCustomerOnboarding() {
     }
 
     try {
-      const response = await fetch(`${supabaseUrl}/functions/v1/provision-customer-phone`, {
+      const response = await fetch('/api/provision-phone', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
         },
         body: JSON.stringify({
           customerId: customerProfile.id,
@@ -392,7 +391,7 @@ export function useCustomerOnboarding() {
       console.error('Provisioning error:', error);
       return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
     }
-  }, [customerProfile, supabaseUrl]);
+  }, [customerProfile]);
 
   return {
     isLoading,

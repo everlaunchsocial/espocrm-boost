@@ -1,5 +1,5 @@
 import { db } from "./db";
-import { eq, desc, and, sql } from "drizzle-orm";
+import { eq, desc, and, sql, lt, ne, asc } from "drizzle-orm";
 import {
   accounts, contacts, leads, deals, tasks, activities, notes, demos,
   estimates, estimateItems, invoices, invoiceItems, calendarBookings,
@@ -10,11 +10,13 @@ import {
   type Account, type Contact, type Lead, type Deal, type Task, type Activity,
   type Note, type Demo, type Estimate, type Invoice, type CalendarBooking,
   type Affiliate, type AffiliatePlan, type CustomerPlan, type CustomerProfile,
-  type BillingSubscription, type Email, type Profile,
+  type BillingSubscription, type Email, type Profile, type VoiceSettings,
+  type ChatSettings, type VapiAccount, type CustomerPhoneNumber,
   type InsertAccount, type InsertContact, type InsertLead, type InsertDeal,
   type InsertTask, type InsertActivity, type InsertNote, type InsertDemo,
   type InsertEstimate, type InsertInvoice, type InsertCalendarBooking,
-  type InsertAffiliate, type InsertCustomerProfile
+  type InsertAffiliate, type InsertCustomerProfile, type InsertCustomerPhoneNumber,
+  type InsertVapiAccount
 } from "@shared/schema";
 
 export interface IStorage {
@@ -67,6 +69,22 @@ export interface IStorage {
   // Profiles
   getProfile(userId: string): Promise<Profile | undefined>;
   upsertProfile(userId: string, data: Partial<Profile>): Promise<Profile>;
+
+  // Customer Profiles
+  getCustomerProfile(id: string): Promise<CustomerProfile | undefined>;
+  updateCustomerProfile(id: string, data: Partial<CustomerProfile>): Promise<CustomerProfile | undefined>;
+
+  // Voice & Chat Settings
+  getVoiceSettings(customerId: string): Promise<VoiceSettings | undefined>;
+  getChatSettings(customerId: string): Promise<ChatSettings | undefined>;
+
+  // Phone Provisioning
+  getCustomerPhoneNumber(customerId: string): Promise<CustomerPhoneNumber | undefined>;
+  createCustomerPhoneNumber(data: InsertCustomerPhoneNumber): Promise<CustomerPhoneNumber>;
+  getAvailableVapiAccount(): Promise<VapiAccount | undefined>;
+  getVapiAccountByName(name: string): Promise<VapiAccount | undefined>;
+  createVapiAccount(data: InsertVapiAccount): Promise<VapiAccount>;
+  incrementVapiAccountNumbers(id: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -250,6 +268,73 @@ export class DatabaseStorage implements IStorage {
         .returning();
       return created;
     }
+  }
+
+  // Customer Profiles
+  async getCustomerProfile(id: string): Promise<CustomerProfile | undefined> {
+    const [profile] = await db.select().from(customerProfiles).where(eq(customerProfiles.id, id));
+    return profile;
+  }
+
+  async updateCustomerProfile(id: string, data: Partial<CustomerProfile>): Promise<CustomerProfile | undefined> {
+    const [profile] = await db.update(customerProfiles)
+      .set(data)
+      .where(eq(customerProfiles.id, id))
+      .returning();
+    return profile;
+  }
+
+  // Voice & Chat Settings
+  async getVoiceSettings(customerId: string): Promise<VoiceSettings | undefined> {
+    const [settings] = await db.select().from(voiceSettings).where(eq(voiceSettings.customerId, customerId));
+    return settings;
+  }
+
+  async getChatSettings(customerId: string): Promise<ChatSettings | undefined> {
+    const [settings] = await db.select().from(chatSettings).where(eq(chatSettings.customerId, customerId));
+    return settings;
+  }
+
+  // Phone Provisioning
+  async getCustomerPhoneNumber(customerId: string): Promise<CustomerPhoneNumber | undefined> {
+    const [phone] = await db.select().from(customerPhoneNumbers).where(eq(customerPhoneNumbers.customerId, customerId));
+    return phone;
+  }
+
+  async createCustomerPhoneNumber(data: InsertCustomerPhoneNumber): Promise<CustomerPhoneNumber> {
+    const [phone] = await db.insert(customerPhoneNumbers).values(data).returning();
+    return phone;
+  }
+
+  async getAvailableVapiAccount(): Promise<VapiAccount | undefined> {
+    const [account] = await db.select().from(vapiAccounts)
+      .where(and(
+        eq(vapiAccounts.isActive, true),
+        ne(vapiAccounts.apiKey, 'STORED_IN_SECRETS'),
+        lt(vapiAccounts.numbersProvisioned, 10)
+      ))
+      .orderBy(asc(vapiAccounts.numbersProvisioned))
+      .limit(1);
+    return account;
+  }
+
+  async getVapiAccountByName(name: string): Promise<VapiAccount | undefined> {
+    const [account] = await db.select().from(vapiAccounts).where(eq(vapiAccounts.name, name));
+    return account;
+  }
+
+  async createVapiAccount(data: InsertVapiAccount): Promise<VapiAccount> {
+    const [account] = await db.insert(vapiAccounts).values(data).returning();
+    return account;
+  }
+
+  async incrementVapiAccountNumbers(id: string): Promise<void> {
+    await db.update(vapiAccounts)
+      .set({ 
+        numbersProvisioned: sql`${vapiAccounts.numbersProvisioned} + 1`,
+        updatedAt: new Date()
+      })
+      .where(eq(vapiAccounts.id, id));
   }
 }
 
