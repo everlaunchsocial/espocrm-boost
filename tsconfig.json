@@ -21,11 +21,12 @@
     "strictNullChecks": false,
     "allowJs": true,
     "baseUrl": ".",
+    "types": ["vite/client"],
     "paths": {
-      "@/*": ["./client/src/*"],
+      "@/*": ["./src/*"],
       "@shared/*": ["./shared/*"],
       "@assets/*": ["./attached_assets/*"]
     }
   },
-  "include": ["client/src", "server", "shared"]
+  "include": ["src", "server", "shared"]
 }
