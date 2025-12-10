@@ -7,13 +7,16 @@ import { useAffiliateContext } from "@/hooks/useAffiliateContext";
 import { storeAffiliateAttribution } from "@/utils/affiliateAttribution";
 import { useEffect } from "react";
 
+// Plans must match database: starter, growth, professional
 const plans = [
   {
+    id: "starter",
     name: "Starter",
-    price: 99,
-    minutes: 100,
+    price: 149,
+    setupFee: 499,
+    minutes: 300,
     features: [
-      "100 minutes/month",
+      "300 minutes/month",
       "AI Voice Receptionist",
       "Lead Capture",
       "Email Notifications",
@@ -21,12 +24,14 @@ const plans = [
     ],
   },
   {
-    name: "Pro",
-    price: 189,
-    minutes: 300,
+    id: "growth",
+    name: "Growth",
+    price: 249,
+    setupFee: 799,
+    minutes: 750,
     popular: true,
     features: [
-      "300 minutes/month",
+      "750 minutes/month",
       "Everything in Starter",
       "Appointment Booking",
       "SMS Notifications",
@@ -35,12 +40,14 @@ const plans = [
     ],
   },
   {
-    name: "Enterprise",
-    price: 299,
-    minutes: 600,
+    id: "professional",
+    name: "Professional",
+    price: 399,
+    setupFee: 999,
+    minutes: 1500,
     features: [
-      "600 minutes/month",
-      "Everything in Pro",
+      "1500 minutes/month",
+      "Everything in Growth",
       "Multiple Locations",
       "Advanced Analytics",
       "Dedicated Account Manager",
@@ -94,6 +101,11 @@ export default function CustomerLandingPage() {
     }
   }, [affiliate?.id]);
 
+  // Navigate directly to checkout with selected plan
+  const handlePlanSelect = (planId: string) => {
+    navigate(`/buy?plan=${planId}`);
+  };
+
   return (
     <div className="min-h-screen bg-background">
       {/* Hero Section */}
@@ -113,7 +125,7 @@ export default function CustomerLandingPage() {
               Stop losing business to missed calls and voicemail.
             </p>
             <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
-              <Button size="lg" onClick={() => navigate("/buy")} className="px-8">
+              <Button size="lg" onClick={() => handlePlanSelect("growth")} className="px-8">
                 Get Started Now
               </Button>
               <Button size="lg" variant="outline" onClick={() => navigate("/demo-request")}>
@@ -186,6 +198,9 @@ export default function CustomerLandingPage() {
                   <CardDescription className="mt-2">
                     {plan.minutes} minutes included
                   </CardDescription>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    + ${plan.setupFee} one-time setup
+                  </p>
                 </CardHeader>
                 <CardContent>
                   <ul className="mb-6 space-y-3">
@@ -199,7 +214,7 @@ export default function CustomerLandingPage() {
                   <Button 
                     className="w-full" 
                     variant={plan.popular ? "default" : "outline"}
-                    onClick={() => navigate("/buy")}
+                    onClick={() => handlePlanSelect(plan.id)}
                   >
                     Get Started
                   </Button>
@@ -221,7 +236,7 @@ export default function CustomerLandingPage() {
             Set up takes less than 10 minutes.
           </p>
           <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
-            <Button size="lg" onClick={() => navigate("/buy")} className="px-8">
+            <Button size="lg" onClick={() => handlePlanSelect("growth")} className="px-8">
               Start Your Free Trial
             </Button>
             <Button size="lg" variant="ghost" onClick={() => navigate("/demo-request")}>
