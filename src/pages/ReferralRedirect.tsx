@@ -1,17 +1,18 @@
-import { useParams, useNavigate, Navigate } from 'react-router-dom';
+import { useParams, Navigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { storeAffiliateAttribution } from '@/utils/affiliateAttribution';
+import CustomerLandingPage from '@/pages/customer/CustomerLandingPage';
 
 /**
  * Handles /:username routes - checks if username is a valid affiliate
- * If valid: redirects to /affiliate-signup?ref={username}
+ * If valid: shows CustomerLandingPage with affiliate attribution stored
  * If not: renders 404
  */
 export default function ReferralRedirect() {
   const { username } = useParams<{ username: string }>();
-  const navigate = useNavigate();
   const [checking, setChecking] = useState(true);
-  const [isValidAffiliate, setIsValidAffiliate] = useState(false);
+  const [affiliateId, setAffiliateId] = useState<string | null>(null);
 
   useEffect(() => {
     async function checkAffiliate() {
@@ -27,23 +28,22 @@ export default function ReferralRedirect() {
         });
 
         if (error || !data) {
-          setIsValidAffiliate(false);
+          setAffiliateId(null);
         } else {
-          setIsValidAffiliate(true);
-          // Redirect to affiliate signup with ref parameter
-          navigate(`/affiliate-signup?ref=${username}`, { replace: true });
-          return;
+          setAffiliateId(data);
+          // Store affiliate attribution for customer purchases
+          storeAffiliateAttribution(data);
         }
       } catch (err) {
         console.error('Error checking affiliate:', err);
-        setIsValidAffiliate(false);
+        setAffiliateId(null);
       }
       
       setChecking(false);
     }
 
     checkAffiliate();
-  }, [username, navigate]);
+  }, [username]);
 
   // Still checking - show loading
   if (checking) {
@@ -57,11 +57,11 @@ export default function ReferralRedirect() {
     );
   }
 
-  // If valid affiliate, redirect will happen in useEffect
-  // If not valid, show 404
-  if (!isValidAffiliate) {
-    return <Navigate to="/not-found" replace />;
+  // Valid affiliate - show customer sales page
+  if (affiliateId) {
+    return <CustomerLandingPage />;
   }
 
-  return null;
+  // Invalid username - show 404
+  return <Navigate to="/not-found" replace />;
 }
