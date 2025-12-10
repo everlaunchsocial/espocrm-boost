@@ -218,6 +218,84 @@ ${customerProfile.businessType ? `Industry: ${customerProfile.businessType}` : "
     }
   });
 
+  // Release Phone Number Route
+  app.post("/api/release-phone", async (req: Request, res: Response) => {
+    try {
+      const { customerId } = req.body;
+
+      if (!customerId) {
+        return res.status(400).json({ success: false, error: "customerId is required" });
+      }
+
+      console.log(`Releasing phone for customer: ${customerId}`);
+
+      // Get the phone record
+      const phoneRecord = await storage.getCustomerPhoneNumber(customerId);
+      if (!phoneRecord) {
+        return res.status(404).json({ success: false, error: "No phone number found for this customer" });
+      }
+
+      // Get Vapi API key
+      const vapiApiKey = process.env.VAPI_API_KEY;
+      if (!vapiApiKey) {
+        return res.status(503).json({ success: false, error: "Vapi API key not configured" });
+      }
+
+      // Step 1: Delete the phone number from Vapi
+      if (phoneRecord.vapiPhoneId) {
+        console.log(`Deleting Vapi phone: ${phoneRecord.vapiPhoneId}`);
+        const phoneDeleteResponse = await fetch(`https://api.vapi.ai/phone-number/${phoneRecord.vapiPhoneId}`, {
+          method: "DELETE",
+          headers: { "Authorization": `Bearer ${vapiApiKey}` },
+        });
+
+        if (!phoneDeleteResponse.ok) {
+          const errorText = await phoneDeleteResponse.text();
+          console.error("Failed to delete phone from Vapi:", errorText);
+        } else {
+          console.log("Phone number deleted from Vapi");
+        }
+      }
+
+      // Step 2: Delete the assistant from Vapi
+      if (phoneRecord.vapiAssistantId) {
+        console.log(`Deleting Vapi assistant: ${phoneRecord.vapiAssistantId}`);
+        const assistantDeleteResponse = await fetch(`https://api.vapi.ai/assistant/${phoneRecord.vapiAssistantId}`, {
+          method: "DELETE",
+          headers: { "Authorization": `Bearer ${vapiApiKey}` },
+        });
+
+        if (!assistantDeleteResponse.ok) {
+          const errorText = await assistantDeleteResponse.text();
+          console.error("Failed to delete assistant from Vapi:", errorText);
+        } else {
+          console.log("Assistant deleted from Vapi");
+        }
+      }
+
+      // Step 3: Decrement the vapi account counter
+      await storage.decrementVapiAccountNumbers(phoneRecord.vapiAccountId);
+
+      // Step 4: Delete from database
+      await storage.deleteCustomerPhoneNumber(customerId);
+
+      console.log(`Successfully released ${phoneRecord.phoneNumber} for customer ${customerId}`);
+
+      return res.json({
+        success: true,
+        releasedNumber: phoneRecord.phoneNumber,
+        message: "Phone number released successfully"
+      });
+
+    } catch (error) {
+      console.error("Release error:", error);
+      return res.status(500).json({
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

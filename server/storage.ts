@@ -85,6 +85,8 @@ export interface IStorage {
   getVapiAccountByName(name: string): Promise<VapiAccount | undefined>;
   createVapiAccount(data: InsertVapiAccount): Promise<VapiAccount>;
   incrementVapiAccountNumbers(id: string): Promise<void>;
+  decrementVapiAccountNumbers(id: string): Promise<void>;
+  deleteCustomerPhoneNumber(customerId: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -335,6 +337,19 @@ export class DatabaseStorage implements IStorage {
         updatedAt: new Date()
       })
       .where(eq(vapiAccounts.id, id));
+  }
+
+  async decrementVapiAccountNumbers(id: string): Promise<void> {
+    await db.update(vapiAccounts)
+      .set({ 
+        numbersProvisioned: sql`GREATEST(0, ${vapiAccounts.numbersProvisioned} - 1)`,
+        updatedAt: new Date()
+      })
+      .where(eq(vapiAccounts.id, id));
+  }
+
+  async deleteCustomerPhoneNumber(customerId: string): Promise<void> {
+    await db.delete(customerPhoneNumbers).where(eq(customerPhoneNumbers.customerId, customerId));
   }
 }
 
