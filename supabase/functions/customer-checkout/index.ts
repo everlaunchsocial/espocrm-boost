@@ -91,6 +91,15 @@ Deno.serve(async (req) => {
       quantity: 1,
     });
 
+    // Calculate next billing date (30 days from now)
+    const nextBillingDate = new Date();
+    nextBillingDate.setDate(nextBillingDate.getDate() + 30);
+    const formattedDate = nextBillingDate.toLocaleDateString('en-US', { 
+      month: 'long', 
+      day: 'numeric', 
+      year: 'numeric' 
+    });
+
     // Create Stripe checkout session
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",
@@ -106,10 +115,16 @@ Deno.serve(async (req) => {
       success_url: successUrl,
       cancel_url: cancelUrl,
       subscription_data: {
+        description: `Setup fee + first month. Your next payment of $${plan.monthly_price}/mo will be charged on ${formattedDate}.`,
         metadata: {
           customer_id: customerId,
           plan_id: planId,
           affiliate_id: affiliateId || "",
+        },
+      },
+      custom_text: {
+        submit: {
+          message: `Includes one-time setup fee ($${plan.setup_fee}) + first month ($${plan.monthly_price}). Next billing: ${formattedDate}.`,
         },
       },
     });

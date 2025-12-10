@@ -96,7 +96,7 @@ export default function CustomerBuySuccess() {
             <CardDescription>{error}</CardDescription>
           </CardHeader>
           <CardContent>
-            <Button onClick={() => navigate("/buy")}>Try Again</Button>
+            <Button onClick={() => navigate("/customer/onboarding/wizard/1")}>Continue to Setup</Button>
           </CardContent>
         </Card>
       </div>
