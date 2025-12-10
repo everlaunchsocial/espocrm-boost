@@ -82,6 +82,9 @@ export function CRMLayout({ children }: CRMLayoutProps) {
   const [userEmail, setUserEmail] = useState<string>('');
   const [userName, setUserName] = useState<string>('');
 
+  const [authChecked, setAuthChecked] = useState(false);
+  const [isAuthorized, setIsAuthorized] = useState(false);
+
   // Redirect authenticated non-admin users to their appropriate portal
   useEffect(() => {
     async function checkAndRedirect() {
@@ -98,9 +101,15 @@ export function CRMLayout({ children }: CRMLayoutProps) {
       // User is logged in - redirect based on role
       if (role === 'customer') {
         navigate('/customer');
+        return;
       } else if (role === 'affiliate') {
         navigate('/affiliate');
+        return;
       }
+      
+      // User is admin - allow access
+      setIsAuthorized(true);
+      setAuthChecked(true);
     }
     checkAndRedirect();
   }, [role, isLoading, navigate]);
@@ -146,6 +155,20 @@ export function CRMLayout({ children }: CRMLayoutProps) {
     if (item.superAdminOnly && role !== 'super_admin') return false;
     return true;
   });
+
+  // Show loading screen while checking auth - prevents dashboard flash
+  if (isLoading || !authChecked || !isAuthorized) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-4">
+          <div className="h-12 w-12 rounded-xl bg-primary flex items-center justify-center">
+            <span className="text-primary-foreground font-bold text-2xl">E</span>
+          </div>
+          <div className="animate-pulse text-muted-foreground">Loading...</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
