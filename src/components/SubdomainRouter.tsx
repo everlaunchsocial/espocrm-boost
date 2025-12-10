@@ -1,4 +1,4 @@
-import { ReactNode, useEffect, useState } from 'react';
+import { ReactNode } from 'react';
 import { useLocation } from 'react-router-dom';
 import { isRootReplicatedDomain, getAffiliateUsernameFromPath } from '@/utils/subdomainRouting';
 import CustomerLandingPage from '@/pages/customer/CustomerLandingPage';
@@ -26,11 +26,8 @@ const RESERVED_PATHS = [
  */
 export function SubdomainRouter({ children }: SubdomainRouterProps) {
   const location = useLocation();
-  const [isReplicatedDomain, setIsReplicatedDomain] = useState(false);
-
-  useEffect(() => {
-    setIsReplicatedDomain(isRootReplicatedDomain());
-  }, []);
+  // Check synchronously - window.location.hostname is always available
+  const isReplicatedDomain = isRootReplicatedDomain();
 
   // Only handle routing on the replicated domain (tryeverlaunch.com)
   if (!isReplicatedDomain) {
