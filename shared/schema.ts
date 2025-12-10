@@ -396,6 +396,9 @@ export const customerProfiles = pgTable("customer_profiles", {
   affiliateId: uuid("affiliate_id").references(() => affiliates.id),
   customerPlanId: uuid("customer_plan_id").references(() => customerPlans.id),
   planName: text("plan_name"),
+  businessName: text("business_name"),
+  businessType: text("business_type"),
+  websiteUrl: text("website_url"),
   minutesIncluded: integer("minutes_included").notNull().default(0),
   minutesUsed: integer("minutes_used").notNull().default(0),
   overageRate: numeric("overage_rate").notNull().default("0"),
@@ -451,6 +454,8 @@ export const voiceSettings = pgTable("voice_settings", {
   voiceGender: text("voice_gender").default("female"),
   voiceSpeed: numeric("voice_speed").default("1.0"),
   voicePitch: numeric("voice_pitch").default("1.0"),
+  voiceStyle: text("voice_style").default("friendly"),
+  greetingText: text("greeting_text"),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
@@ -459,6 +464,7 @@ export const chatSettings = pgTable("chat_settings", {
   customerId: uuid("customer_id").notNull().unique().references(() => customerProfiles.id, { onDelete: "cascade" }),
   tone: text("tone").default("professional"),
   instructions: text("instructions"),
+  greetingText: text("greeting_text"),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

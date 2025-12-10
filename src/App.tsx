@@ -68,6 +68,7 @@ import AdminCompPlans from "./pages/admin/AdminCompPlans";
 import AdminAffiliates from "./pages/admin/AdminAffiliates";
 import SignupAnalytics from "./pages/admin/SignupAnalytics";
 import AdminGenealogy from "./pages/admin/AdminGenealogy";
+import AdminPhoneNumbers from "./pages/admin/AdminPhoneNumbers";
 
 // Customer Portal pages
 import CustomerDashboard from "./pages/customer/CustomerDashboard";
@@ -199,6 +200,7 @@ const App = () => (
             <Route path="/admin/comp-plans" element={<AdminCompPlans />} />
             <Route path="/admin/affiliates" element={<AdminAffiliates />} />
             <Route path="/admin/genealogy" element={<AdminGenealogy />} />
+            <Route path="/admin/phone-numbers" element={<AdminPhoneNumbers />} />
             <Route path="/admin/payouts" element={<AdminPayouts />} />
             <Route path="/admin/customer-usage" element={<AdminCustomerUsage />} />
             <Route path="/admin/signup-analytics" element={<SignupAnalytics />} />

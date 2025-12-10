@@ -79,6 +79,7 @@ export interface IStorage {
   getChatSettings(customerId: string): Promise<ChatSettings | undefined>;
 
   // Phone Provisioning
+  getAllPhoneNumbers(): Promise<CustomerPhoneNumber[]>;
   getCustomerPhoneNumber(customerId: string): Promise<CustomerPhoneNumber | undefined>;
   createCustomerPhoneNumber(data: InsertCustomerPhoneNumber): Promise<CustomerPhoneNumber>;
   getAvailableVapiAccount(): Promise<VapiAccount | undefined>;
@@ -298,6 +299,10 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Phone Provisioning
+  async getAllPhoneNumbers(): Promise<CustomerPhoneNumber[]> {
+    return await db.select().from(customerPhoneNumbers).orderBy(desc(customerPhoneNumbers.createdAt));
+  }
+
   async getCustomerPhoneNumber(customerId: string): Promise<CustomerPhoneNumber | undefined> {
     const [phone] = await db.select().from(customerPhoneNumbers).where(eq(customerPhoneNumbers.customerId, customerId));
     return phone;

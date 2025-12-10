@@ -7,6 +7,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json({ status: "ok" });
   });
 
+  // Admin: List all phone numbers
+  app.get("/api/admin/phone-numbers", async (_req: Request, res: Response) => {
+    try {
+      const phones = await storage.getAllPhoneNumbers();
+      return res.json(phones);
+    } catch (error) {
+      console.error("Error fetching phone numbers:", error);
+      return res.status(500).json({ error: "Failed to fetch phone numbers" });
+    }
+  });
+
   // Phone Provisioning Route
   app.post("/api/provision-phone", async (req: Request, res: Response) => {
     try {
