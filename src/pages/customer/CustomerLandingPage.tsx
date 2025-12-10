@@ -94,6 +94,11 @@ export default function CustomerLandingPage() {
   const affiliateUsername = getAffiliateUsernameFromPath(window.location.pathname);
   const { affiliate } = useAffiliateContext(affiliateUsername || undefined);
 
+  // Set page title
+  useEffect(() => {
+    document.title = "EverLaunch AI - Never Miss Another Call";
+  }, []);
+
   // Store affiliate attribution when page loads
   useEffect(() => {
     if (affiliate?.id) {
