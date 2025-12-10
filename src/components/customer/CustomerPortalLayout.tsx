@@ -7,7 +7,8 @@ import {
   CreditCard, 
   HelpCircle,
   LogOut,
-  Menu
+  Menu,
+  Play
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useUserRole } from '@/hooks/useUserRole';
@@ -20,6 +21,7 @@ import { toast } from 'sonner';
 
 const navItems = [
   { path: '/customer/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { path: '/customer/preview', label: 'Preview AI', icon: Play },
   { path: '/customer/settings', label: 'Settings', icon: Settings },
   { path: '/customer/leads', label: 'Leads', icon: Users },
   { path: '/customer/billing', label: 'Billing', icon: CreditCard },

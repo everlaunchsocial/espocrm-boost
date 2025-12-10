@@ -80,6 +80,7 @@ import DeploySettings from "./pages/customer/DeploySettings";
 import CustomerLeads from "./pages/customer/CustomerLeads";
 import CustomerBilling from "./pages/customer/CustomerBilling";
 import CustomerSupport from "./pages/customer/CustomerSupport";
+import CustomerPreview from "./pages/customer/CustomerPreview";
 
 // Customer Onboarding pages
 import OnboardingStep1 from "./pages/customer/OnboardingStep1";
@@ -161,6 +162,7 @@ const App = () => (
           <Route element={<CustomerPortalLayout />}>
             <Route path="/customer" element={<CustomerDashboard />} />
             <Route path="/customer/dashboard" element={<CustomerDashboard />} />
+            <Route path="/customer/preview" element={<CustomerPreview />} />
             <Route path="/customer/settings" element={<CustomerSettings />} />
             <Route path="/customer/settings/voice" element={<VoiceSettings />} />
             <Route path="/customer/settings/knowledge" element={<KnowledgeSettings />} />

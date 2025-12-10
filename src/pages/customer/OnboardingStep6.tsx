@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { ArrowLeft, Rocket, Code, Phone, Play, Mail, Copy, Check, PartyPopper, Loader2 } from 'lucide-react';
+import { ArrowLeft, Rocket, Code, Phone, Play, Mail, Copy, Check, PartyPopper, Loader2, Eye } from 'lucide-react';
 import { toast } from 'sonner';
 
 // Common US area codes for quick selection
@@ -300,6 +300,23 @@ Thanks!`);
             </li>
           </ul>
         </div>
+
+        {/* Preview AI Button */}
+        {displayNumber && (
+          <div className="p-4 rounded-lg bg-accent/50 border border-accent text-center">
+            <p className="text-sm text-muted-foreground mb-3">
+              Want to test your AI before going live?
+            </p>
+            <Button
+              variant="outline"
+              onClick={() => navigate('/customer/preview')}
+              className="gap-2"
+            >
+              <Play className="h-4 w-4" />
+              Preview Your AI
+            </Button>
+          </div>
+        )}
 
         <div className="flex justify-between pt-4">
           <Button variant="outline" onClick={handleBack} className="gap-2">
