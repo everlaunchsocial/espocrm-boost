@@ -45,7 +45,7 @@ const plans: PlanInfo[] = [
   {
     code: 'professional',
     name: 'Professional',
-    setupFee: 999,
+    setupFee: 499,
     monthlyPrice: 399,
     minutesIncluded: 1500,
     overageRate: 0.08,

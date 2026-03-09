@@ -50,7 +50,7 @@ const plans = [
     code: "professional",
     name: "Professional",
     price: 399,
-    setupFee: 999,
+    setupFee: 499,
     minutes: 1500,
     features: [
       "1500 minutes/month",

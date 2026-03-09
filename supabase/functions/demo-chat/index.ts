@@ -42,7 +42,7 @@ serve(async (req) => {
     // Fetch the demo to get business context
     const { data: demo, error: demoError } = await supabase
       .from('demos')
-      .select('business_name, website_url, ai_prompt, ai_persona_name')
+      .select('business_name, website_url, ai_prompt, ai_persona_name, affiliate_id')
       .eq('id', demoId)
       .single();
 
@@ -54,6 +54,29 @@ serve(async (req) => {
       );
     }
 
+    // Fetch business hours from customer_profiles if affiliate_id exists
+    let businessHours: string | null = null;
+    let customerTimezone: string | null = null;
+    
+    if (demo.affiliate_id) {
+      const { data: customerProfile } = await supabase
+        .from('customer_profiles')
+        .select('business_hours, customer_timezone')
+        .eq('affiliate_id', demo.affiliate_id)
+        .single();
+      
+      if (customerProfile) {
+        businessHours = customerProfile.business_hours;
+        customerTimezone = customerProfile.customer_timezone;
+        console.log(`Demo chat: fetched business hours for affiliate ${demo.affiliate_id}`);
+      }
+    }
+
+    // Build business hours section for the prompt
+    const businessHoursSection = businessHours 
+      ? `- Business Hours: ${businessHours}${customerTimezone ? ` (${customerTimezone})` : ''}`
+      : '';
+
     // Build system prompt with 5-phase guided conversation flow
     const systemPrompt = demo.ai_prompt || `You are ${demo.ai_persona_name || 'Jenna'}, a friendly AI assistant at EverLaunch AI.
 
@@ -62,6 +85,7 @@ YOUR MISSION: Guide prospects through a structured demo that shows how an AI voi
 YOU ALREADY KNOW about their business from their website:
 - Business: ${demo.business_name}
 ${demo.website_url ? `- Website: ${demo.website_url}` : ''}
+${businessHoursSection}
 
 CONVERSATION PHASES (follow in order):
 
